@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f1868">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Our 3 Months ❤️</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E❤️%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="d-heart" viewBox="0 0 32 32"><path class="fillable" d="M16 27C6 19 3.5 14.5 3.5 10.8 3.5 7 6.3 4.6 9.6 4.6c2.6 0 4.7 1.5 6.4 4 1.7-2.5 3.8-4 6.4-4 3.3 0 6.1 2.4 6.1 6.2C28.5 14.5 26 19 16 27z"/><path d="M8 10c.4-1.6 1.6-2.6 3.2-2.7" fill="none"/></symbol>
+      <symbol id="d-x" viewBox="0 0 32 32"><path d="M8 8c5 5 11 11 16 16M24 8C19 13 13 19 8 24" fill="none"/></symbol>
+      <symbol id="d-prev" viewBox="0 0 32 32"><path d="M20 6c-3 4-7 7-10 10 3 3 7 6 10 10" fill="none"/></symbol>
+      <symbol id="d-next" viewBox="0 0 32 32"><path d="M12 6c3 4 7 7 10 10-3 3-7 6-10 10" fill="none"/></symbol>
+      <symbol id="d-star" viewBox="0 0 32 32"><path class="fillable" d="M16 3c1 7 3 10 13 13-10 3-12 6-13 13-1-7-3-10-13-13C13 13 15 10 16 3z"/></symbol>
+    </defs>
+  </svg>
+
+  <canvas id="bgc" aria-hidden="true"></canvas>
+
+  <div id="loader" class="loader" role="status"><svg class="doodle big-d beat-d" viewBox="0 0 32 32" aria-hidden="true"><use href="#d-heart"/></svg><span>Drawing our heart…</span></div>
+
+  <div id="gate" class="gate" hidden>
+    <form id="gateForm" class="panel">
+      <svg class="doodle big-d" viewBox="0 0 32 32" aria-hidden="true"><use href="#d-heart"/></svg>
+      <p>Just for you</p>
+      <input id="gateInput" type="password" inputmode="numeric" autocomplete="off" placeholder="Secret code" aria-label="Secret code">
+      <button type="submit" class="btn">Open</button>
+      <small id="gateHint"></small>
+    </form>
+  </div>
+
+  <main>
+    <header>
+      <h1 id="title"></h1>
+      <p id="subtitle" class="bubble"></p>
+      <p id="days" class="days"></p>
+    </header>
+
+    <div id="stage" class="stage" role="img" aria-label="A heart made of our memories. Tap a piece to reveal a photo.">
+      <canvas id="heart"></canvas>
+    </div>
+    <p class="hint">Tap a piece of the heart to open it</p>
+
+    <div class="progress panel" aria-live="polite">
+      <div class="pc-top">
+        <svg class="doodle" viewBox="0 0 32 32" aria-hidden="true"><use href="#d-heart"/></svg>
+        <div class="pc-text"><p class="pl">Memories found</p><p class="pn"><b id="found">0</b><span> / <span id="total">0</span></span></p></div>
+      </div>
+      <div class="bar"><span id="barFill"></span></div>
+      <p id="demoNote" class="demo" hidden>Preview mode: add your screenshots to <code>public/photos</code></p>
+    </div>
+  </main>
+
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-label="Memory">
+    <button class="nav prev" id="prev" aria-label="Previous memory"><svg class="doodle" viewBox="0 0 32 32"><use href="#d-prev"/></svg></button>
+    <figure>
+      <figcaption><span class="pill"><svg class="doodle" viewBox="0 0 32 32" aria-hidden="true"><use href="#d-heart"/></svg><span id="dayLabel"></span></span></figcaption>
+      <img id="photo" alt="A day we shared">
+    </figure>
+    <button class="nav next" id="next" aria-label="Next memory"><svg class="doodle" viewBox="0 0 32 32"><use href="#d-next"/></svg></button>
+    <button class="close" id="close" aria-label="Close"><svg class="doodle" viewBox="0 0 32 32"><use href="#d-x"/></svg></button>
+  </div>
+
+  <div id="finale" class="finale" hidden>
+    <div class="finale-card panel">
+      <svg class="doodle big-d beat-d" viewBox="0 0 32 32" aria-hidden="true"><use href="#d-heart"/></svg>
+      <h2 id="finalTitle"></h2>
+      <p id="finalMessage"></p>
+      <p class="sig" id="signature"></p>
+      <button id="finaleClose" class="btn">Back to our heart</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

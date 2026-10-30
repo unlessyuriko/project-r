@@ -1,0 +1,11 @@
+{
+  "name": "three-months-heart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A big red heart made of our memories. Click a piece to reveal a day.",
+  "scripts": {
+    "photos": "node scripts/build-manifest.js",
+    "start": "node scripts/dev.js",
+    "build": "node scripts/build-manifest.js"
+  }
+}

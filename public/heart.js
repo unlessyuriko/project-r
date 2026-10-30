@@ -1,0 +1,199 @@
+// Anime-style 2D heart: a mosaic of cel-shaded cushions with inked outlines, a glossy streak
+// and a white "sticker" rim. One piece per photo; opened pieces turn pale pink with a doodle heart.
+export const INK = "#3a0a24";
+const BASE_W = 1024, BASE_H = 920, BASE_SC = 28;
+const REDS = [[255, 61, 110], [255, 84, 130], [240, 46, 94], [255, 106, 142], [230, 38, 88]];
+
+const mulberry = (seed) => () => {
+  seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const P = (t) => [16 * Math.sin(t) ** 3, 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)];
+
+export function star4(g, x, y, r) {
+  g.beginPath();
+  g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y);
+  g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y);
+  g.quadraticCurveTo(x, y, x, y - r); g.closePath();
+}
+export function miniHeart(g, x, y, s) {
+  g.beginPath();
+  g.moveTo(x, y + s * 0.9);
+  g.bezierCurveTo(x - s * 1.5, y - s * 0.1, x - s * 0.9, y - s * 1.2, x, y - s * 0.4);
+  g.bezierCurveTo(x + s * 0.9, y - s * 1.2, x + s * 1.5, y - s * 0.1, x, y + s * 0.9);
+  g.closePath();
+}
+
+export function createHeart(canvas, n, { mobile, isOpen }) {
+  const Q = mobile ? 0.72 : 1;
+  const W = Math.round(BASE_W * Q), H = Math.round(BASE_H * Q), SC = BASE_SC * Q;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const toPx = (x, y) => [W / 2 + x * SC, H / 2 - (y + 2.5) * SC];
+  const outline = Array.from({ length: 240 }, (_, i) => toPx(...P((i / 240) * Math.PI * 2)));
+  const heartPath = (g) => { g.beginPath(); outline.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+
+  // mask of the heart
+  const mc = document.createElement("canvas");
+  mc.width = W; mc.height = H;
+  const mg = mc.getContext("2d");
+  heartPath(mg); mg.fill();
+  const a = mg.getImageData(0, 0, W, H).data;
+  const mask = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) mask[i] = a[i * 4 + 3] > 127 ? 1 : 0;
+
+  // seeds: best-candidate spread, then Lloyd relaxation => even honeycomb-like cushions
+  const rand = mulberry(1000 + n);
+  const seeds = [];
+  for (let i = 0; i < n; i++) {
+    let best = null, bestD = -1;
+    for (let k = 0; k < 25; k++) {
+      let x, y;
+      do { x = rand() * W; y = rand() * H; } while (!mask[(y | 0) * W + (x | 0)]);
+      let d = Infinity;
+      for (const s of seeds) d = Math.min(d, (s.x - x) ** 2 + (s.y - y) ** 2);
+      if (d > bestD) { bestD = d; best = { x, y }; }
+    }
+    seeds.push(best);
+  }
+  const nearest = (x, y) => {
+    let best = 0, bd = Infinity;
+    for (let k = 0; k < n; k++) {
+      const dx = seeds[k].x - x, dy = seeds[k].y - y, d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = k; }
+    }
+    return best;
+  };
+  for (let it = 0; it < 40; it++) {
+    const sx = new Float64Array(n), sy = new Float64Array(n), cnt = new Float64Array(n);
+    for (let y = 0; y < H; y += 6) for (let x = 0; x < W; x += 6) {
+      if (!mask[y * W + x]) continue;
+      const k = nearest(x, y);
+      sx[k] += x; sy[k] += y; cnt[k]++;
+    }
+    for (let k = 0; k < n; k++) if (cnt[k]) seeds[k] = { x: sx[k] / cnt[k], y: sy[k] / cnt[k] };
+  }
+
+  const owner = new Int16Array(W * H).fill(-1);
+  const bbox = seeds.map(() => ({ x0: W, y0: H, x1: 0, y1: 0 }));
+  const area = new Float64Array(n);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (!mask[y * W + x]) continue;
+    const k = nearest(x, y);
+    owner[y * W + x] = k; area[k]++;
+    const b = bbox[k];
+    if (x < b.x0) b.x0 = x; if (x > b.x1) b.x1 = x;
+    if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y;
+  }
+  const edge = new Uint8Array(W * H);                 // inked lines between pieces
+  const E = Math.max(2, Math.round(3 * Q));
+  for (let y = E; y < H - E; y++) for (let x = E; x < W - E; x++) {
+    const o = owner[y * W + x];
+    if (o < 0) continue;
+    if (owner[y * W + x + E] !== o || owner[y * W + x - E] !== o ||
+        owner[(y + E) * W + x] !== o || owner[(y - E) * W + x] !== o) edge[y * W + x] = 1;
+  }
+  const radius = Array.from(area, (ar) => Math.sqrt(Math.max(ar, 1) / Math.PI) * 1.1);
+  const base = Array.from({ length: n }, (_, k) => REDS[(((k * 2654435761) >>> 0) % REDS.length)]);
+
+  const order = Array.from({ length: n }, (_, i) => i);   // random piece <-> photo
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+  const cellPhoto = order, photoCell = [];
+  order.forEach((p, k) => (photoCell[p] = k));
+
+  // ---- painting ----
+  const img = ctx.createImageData(W, H);
+  const px = img.data;
+  let hover = -1;
+  const dotP = Math.max(4, Math.round(6 * Q));
+
+  function paintPixel(i, x, y) {
+    const p = i * 4, o = owner[i];
+    if (o < 0) { px[p + 3] = 0; return; }
+    const s = seeds[o], R = radius[o];
+    const dx = (x - s.x) / R, dy = (y - s.y) / R;
+    const lit = dx * 0.55 + dy * 0.83;                // >0 = lower-right of the cushion
+    const open = isOpen(cellPhoto[o]);
+    let [r, g, b] = open ? [255, 228, 238] : base[o];
+    if (lit > 0.34) {                                  // cel shadow (flat band) + screentone dots
+      r *= 0.74; g *= open ? 0.8 : 0.5; b *= open ? 0.84 : 0.6;
+      const gx = (x % dotP) - dotP / 2, gy = (y % dotP) - dotP / 2;
+      if (gx * gx + gy * gy < dotP * 0.45) { r *= 0.88; g *= 0.8; b *= 0.85; }
+    } else if (lit < -0.5 && dx * dx + dy * dy < 0.9) { // cel highlight patch
+      r += 36; g += open ? 18 : 62; b += open ? 14 : 52;
+    }
+    if (o === hover) { r += 38; g += 44; b += 44; }
+    if (edge[i]) {
+      if (o === hover) { r = 255; g = 245; b = 250; }
+      else { r = 58; g = 10; b = 36; }
+    }
+    px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = 255;
+  }
+  function paintAll() { for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) paintPixel(y * W + x, x, y); }
+  function paintCell(k) {
+    const b = bbox[k];
+    for (let y = b.y0; y <= b.y1; y++) for (let x = b.x0; x <= b.x1; x++) {
+      const i = y * W + x;
+      if (owner[i] === k) paintPixel(i, x, y);
+    }
+  }
+
+  function highlight() {                               // glossy anime streak on the upper-left lobe
+    const c = [-8, 4];
+    ctx.save();
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(255,255,255,.94)"; ctx.lineWidth = 12 * Q;
+    ctx.beginPath();
+    for (let k = 0; k <= 18; k++) {
+      const [x, y] = P((1.6 + 0.2 * (k / 18)) * Math.PI);
+      const [qx, qy] = toPx(c[0] + (x - c[0]) * 0.8, c[1] + (y - c[1]) * 0.8);
+      k ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy);
+    }
+    ctx.stroke();
+    const [dx, dy] = (() => { const [x, y] = P(1.53 * Math.PI); return toPx(c[0] + (x - c[0]) * 0.8, c[1] + (y - c[1]) * 0.8); })();
+    ctx.lineWidth = 0; ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(dx, dy + 6 * Q, 6 * Q, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function flush() {
+    ctx.putImageData(img, 0, 0);
+    for (let p = 0; p < n; p++) {                      // doodle heart on opened pieces
+      if (!isOpen(p)) continue;
+      const s = seeds[photoCell[p]], sz = Math.min(radius[photoCell[p]] * 0.26, 34 * Q);
+      ctx.fillStyle = "#ff5c8a"; ctx.strokeStyle = INK; ctx.lineWidth = 3.5 * Q; ctx.lineJoin = "round";
+      miniHeart(ctx, s.x, s.y, sz); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fff"; star4(ctx, s.x + sz * 1.5, s.y - sz * 1.3, sz * 0.5); ctx.fill();
+    }
+    ctx.save();
+    heartPath(ctx); ctx.lineJoin = "round"; ctx.lineWidth = 7 * Q; ctx.strokeStyle = INK; ctx.stroke();   // inked rim
+    ctx.restore();
+    highlight();
+    ctx.save();                                        // dark outline + white sticker ring behind the heart
+    ctx.globalCompositeOperation = "destination-over";
+    heartPath(ctx); ctx.lineJoin = "round";
+    ctx.lineWidth = 24 * Q; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.lineWidth = 44 * Q; ctx.strokeStyle = "#fff"; ctx.stroke();
+    ctx.restore();
+  }
+
+  function cellAt(clientX, clientY) {
+    const r = canvas.getBoundingClientRect();
+    const x = Math.floor(((clientX - r.left) / r.width) * W), y = Math.floor(((clientY - r.top) / r.height) * H);
+    return x < 0 || y < 0 || x >= W || y >= H ? -1 : owner[y * W + x];
+  }
+  function setHover(c) {
+    if (c === hover) return;
+    const prev = hover;
+    hover = c;
+    if (prev >= 0) paintCell(prev);
+    if (c >= 0) paintCell(c);
+    flush();
+  }
+  function refresh(photoIdx) { paintCell(photoCell[photoIdx]); flush(); }
+
+  paintAll(); flush();
+  return { cellPhoto, photoCell, cellAt, setHover, refresh, redraw() { paintAll(); flush(); } };
+}
