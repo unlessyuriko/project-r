@@ -1,5 +1,6 @@
 import { createHeart } from "./heart.js";
 import { createBackdrop } from "./backdrop.js";
+import { createScene } from "./heart3d.js";
 
 const cfg = window.LOVE_CONFIG || {};
 const $ = (s) => document.querySelector(s);
@@ -7,7 +8,8 @@ const STORE = "heart-opened-v2";
 const MOBILE = matchMedia("(pointer: coarse)").matches || Math.min(innerWidth, innerHeight) < 640;
 
 let photos = [], demo = false, opened = new Set(), current = -1, finaleSeen = false;
-let heart, backdrop;
+let heart, backdrop, scene;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const safe = (fn) => { try { return fn(); } catch { return null; } };
 
 // ---------- photos ----------
@@ -28,7 +30,7 @@ function placeholder(n) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='640' font-family='Helvetica,Arial,sans-serif'>
     <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${hue},80%,62%)'/><stop offset='1' stop-color='hsl(${hue + 30},70%,35%)'/></linearGradient></defs>
     <rect width='360' height='640' fill='url(#g)'/>
-    <text x='180' y='300' font-size='90' text-anchor='middle' fill='white'>♥</text>
+    <text x='180' y='300' font-size='90' text-anchor='middle' fill='white'>\u2665</text>
     <text x='180' y='380' font-size='24' text-anchor='middle' fill='white'>Your screenshot #${n}</text></svg>`;
   return "data:image/svg+xml," + encodeURIComponent(svg);
 }
@@ -59,7 +61,7 @@ function show(p, dir = 0) {
   $("#modal").hidden = false;
   fitPhoto();
   document.body.style.overflow = "hidden";
-  setTimeout(() => { if (!$("#modal").hidden) backdrop.paused = true; }, 450);   // save battery while a photo covers the screen
+  setTimeout(() => { if (!$("#modal").hidden) { backdrop.paused = true; scene.paused = true; } }, 450);   // save battery while a photo covers the screen
   if (!opened.has(p)) {
     opened.add(p);
     safe(() => localStorage.setItem(STORE + photos.length, JSON.stringify([...opened])));
@@ -68,7 +70,7 @@ function show(p, dir = 0) {
   }
 }
 function hide() {
-  backdrop.paused = false;
+  backdrop.paused = false; scene.paused = false;
   $("#modal").hidden = true;
   document.body.style.overflow = "";
   if (opened.size === photos.length && !finaleSeen) showFinale();
@@ -146,45 +148,9 @@ function gate() {
   });
 }
 
-// ---------- horizontal spin ----------
-let ang = 0, vel = 0, dragging = false, idleSince = 0, flip = null;   // flip = scripted full turn after a tap
+// ---------- horizontal spin (the 3D scene does the drawing) ----------
+let ang = 0, vel = 0, dragging = false, idleSince = 0, flip = null, lift = 0, sway = 0;   // flip = scripted full turn after a tap
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const PERSPECTIVE = 1100;
-let lift = 0;                                        // px toward the viewer: the heart rises while it turns
-function applySpin() {
-  $("#spin").style.transform = `perspective(${PERSPECTIVE}px) translateZ(${lift.toFixed(1)}px) rotateY(${ang.toFixed(2)}deg)`;
-}
-// The heart is a solid: a front face, a back face and a stack of wall layers in between (see buildSolid).
-function buildSolid() {
-  const sp = $("#spin"), st = $("#stage");
-  const set = () => st.style.setProperty("--d", Math.max(8, st.clientWidth * 0.032).toFixed(1) + "px");
-  set(); new ResizeObserver(set).observe(st);
-  const wall = heart.silhouette(0.4, "#f5b6cb").toDataURL();
-  const N = 16;
-  for (let k = 0; k < N; k++) {                      // stacked cut-outs make the thick sticker edge
-    const w = document.createElement("div");
-    w.className = "wall";
-    w.style.backgroundImage = `url(${wall})`;
-    w.style.transform = `translateZ(calc(var(--d) * ${(1 - (2 * k) / (N - 1)).toFixed(3)}))`;
-    w.style.filter = `brightness(${(0.78 + 0.22 * Math.abs(1 - (2 * k) / (N - 1))).toFixed(2)})`;
-    sp.insertBefore(w, sp.firstChild);
-  }
-  const back = document.createElement("div");
-  back.className = "face back";
-  back.appendChild(backCanvas);
-  sp.appendChild(back);
-  drawBack();
-}
-const backCanvas = document.createElement("canvas");
-backCanvas.id = "heartBack";
-function drawBack() {                                // the back shows the mosaic too (a copy of the front)
-  const src = $("#heart");
-  const w = Math.round(src.width * 0.6), h = Math.round(src.height * 0.6);
-  if (backCanvas.width !== w) { backCanvas.width = w; backCanvas.height = h; }
-  const g = backCanvas.getContext("2d");
-  g.clearRect(0, 0, w, h);
-  g.drawImage(src, 0, 0, w, h);
-}
 function spinLoop() {
   requestAnimationFrame(spinLoop);
   if (flip) {
@@ -192,45 +158,23 @@ function spinLoop() {
     ang = flip.from + 360 * easeInOut(t);
     lift = 90 * Math.sin(Math.PI * t);               // rises toward you mid-turn, then settles back
     if (t >= 1) { ang = flip.from + 360; lift = 0; flip = null; idleSince = performance.now(); }
-    applySpin();
-    return;
-  }
-  if (dragging || $("#modal").hidden === false) return;
-  if (Math.abs(vel) > 0.02) { ang += vel; vel *= 0.94; idleSince = performance.now(); }
-  else {
-    vel = 0;
-    if (performance.now() - idleSince > 2200) {      // settle back to facing front
-      const target = Math.round(ang / 360) * 360;
-      ang += (target - ang) * 0.08;
-      if (Math.abs(target - ang) < 0.05) ang = target;
+  } else if (!dragging && $("#modal").hidden) {
+    if (Math.abs(vel) > 0.02) { ang += vel; vel *= 0.94; idleSince = performance.now(); }
+    else {
+      vel = 0;
+      if (performance.now() - idleSince > 2200) {    // settle back to facing front
+        const target = Math.round(ang / 360) * 360;
+        ang += (target - ang) * 0.08;
+        if (Math.abs(target - ang) < 0.05) ang = target;
+      }
     }
   }
-  applySpin();
-}
-// screen point -> position on the heart, through the CSS 3D transform (a homography on the heart's plane)
-function pick(clientX, clientY) {
-  const st = $("#stage"), r = st.getBoundingClientRect();
-  const depth = parseFloat(st.style.getPropertyValue("--d")) || 0;
-  const frontFacing = Math.cos((ang * Math.PI) / 180) >= 0;
-  let m = new DOMMatrix(getComputedStyle($("#spin")).transform);
-  m = frontFacing ? m.translate(0, 0, depth) : m.translate(0, 0, -depth).rotate(0, 180, 0);   // the plane of the visible face
-  const H =[[m.m11, m.m21, m.m41], [m.m12, m.m22, m.m42], [m.m14, m.m24, m.m44]];
-  const [a, b, c, d, e, f, g, h, i] = [H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]];
-  const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-  if (Math.abs(det) < 1e-9) return -1;
-  const X = clientX - (r.left + r.width / 2), Y = clientY - (r.top + r.height / 2);
-  const inv = [
-    [(e * i - f * h), (c * h - b * i), (b * f - c * e)],
-    [(f * g - d * i), (a * i - c * g), (c * d - a * f)],
-    [(d * h - e * g), (b * g - a * h), (a * e - b * d)],
-  ];
-  const px = inv[0][0] * X + inv[0][1] * Y + inv[0][2], py = inv[1][0] * X + inv[1][1] * Y + inv[1][2], pw = inv[2][0] * X + inv[2][1] * Y + inv[2][2];
-  if (!pw) return -1;
-  const lx = px / pw, ly = py / pw;                  // px offset from the heart's centre
-  return heart.cellAtUV(0.5 + lx / r.width, 0.5 + ly / r.height);
+  const idle = !flip && !dragging && Math.abs(vel) < 0.02 && performance.now() - idleSince > 1500 && $("#modal").hidden;
+  sway += ((idle && !reduced ? 1 : 0) - sway) * 0.04;     // resting heart sways a little so its depth stays visible
+  scene.set(ang + sway * 14 * Math.sin(performance.now() / 1700), lift);
 }
 function bindHeart() {
-  const cv = $("#spin"), st = $("#stage");           // events on the whole solid, so the back and edge respond too
+  const cv = $("#stage"), st = cv;
   let down = null, moved = false;
   cv.addEventListener("pointerdown", (e) => {
     if (flip) return;                                // busy turning after a tap
@@ -240,7 +184,7 @@ function bindHeart() {
   cv.addEventListener("pointermove", (e) => {
     if (!down) {
       if (e.pointerType !== "mouse") return;
-      const c = pick(e.clientX, e.clientY);
+      const c = scene.pick(e.clientX, e.clientY);
       heart.setHover(c);
       cv.style.cursor = c >= 0 ? "pointer" : "grab";
       return;
@@ -248,7 +192,7 @@ function bindHeart() {
     if (Math.abs(e.clientX - down.x) > 6) moved = true;
     if (moved) {
       const d = (e.clientX - down.last) * 0.6;
-      ang += d; vel = d; applySpin();
+      ang += d; vel = d;
       heart.setHover(-1); cv.style.cursor = "grabbing";
     }
     down.last = e.clientX;
@@ -258,21 +202,22 @@ function bindHeart() {
     const wasTap = !moved && !cancelled;
     down = null; dragging = false; idleSince = performance.now();
     if (wasTap) {
-      const c = pick(e.clientX, e.clientY);
+      const c = scene.pick(e.clientX, e.clientY);
       if (c >= 0) {
         burst(e.clientX, e.clientY);
         const MS = 750;                              // the heart spins once, then the photo opens
         flip = { from: ang, t0: performance.now(), ms: MS };
         vel = 0;
         const photo = heart.cellPhoto[c];
-        setTimeout(() => { st.classList.remove("kick"); void st.offsetWidth; st.classList.add("kick"); show(photo); }, MS - 120);
+        setTimeout(() => { scene.kick(); show(photo); }, MS - 120);
       }
     }
   };
   cv.addEventListener("pointerup", (e) => end(e, false));
   cv.addEventListener("pointercancel", (e) => end(e, true));
   cv.addEventListener("pointerleave", () => { if (!down) heart.setHover(-1); });
-  spinLoop();}
+  spinLoop();
+}
 
 async function init() {
   const title = cfg.title || "Our Heart";            // sticker title: letters pop in one by one
@@ -281,7 +226,7 @@ async function init() {
   [...title].forEach((ch, i) => {
     const s = document.createElement("span");
     s.className = "ch"; s.setAttribute("aria-hidden", "true");
-    s.textContent = ch === " " ? " " : ch;
+    s.textContent = ch === " " ? "\u00a0" : ch;
     s.style.animationDelay = 120 + i * 55 + "ms";
     h1.appendChild(s);
   });
@@ -300,8 +245,15 @@ async function init() {
   await new Promise((r) => setTimeout(r, 40));      // let the loader paint before the heavy mosaic maths
   const saved = safe(() => JSON.parse(localStorage.getItem(STORE + photos.length) || "[]")) || [];
   opened = new Set(saved.filter((p) => p < photos.length));
-  heart = createHeart($("#heart"), photos.length, { mobile: MOBILE, isOpen: (p) => opened.has(p), onFlush: () => drawBack() });
-  buildSolid();
+  const tex = document.createElement("canvas");      // the mosaic is painted here and wrapped onto the 3D heart
+  heart = createHeart(tex, photos.length, { mobile: MOBILE, isOpen: (p) => opened.has(p), flat: true, onFlush: () => scene && scene.refreshTexture() });
+  try {
+    scene = createScene({ canvas: $("#gl"), stageEl: $("#stage"), heartCanvas: tex, heart, mobile: MOBILE, reduced });
+  } catch (err) {
+    console.error(err);
+    $("#stage").innerHTML = '<p class="nogl">Your browser couldn\'t start the 3D view. Try Chrome or Safari.</p>';
+    scene = { set() {}, kick() {}, pick: () => -1, refreshTexture() {}, paused: false };
+  }
   backdrop = createBackdrop($("#bgc"), { mobile: MOBILE, getRect: () => $("#stage").getBoundingClientRect() });
   addEventListener("resize", () => backdrop.resize());
   bindHeart();

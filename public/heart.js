@@ -26,7 +26,9 @@ export function miniHeart(g, x, y, s) {
   g.closePath();
 }
 
-export function createHeart(canvas, n, { mobile, isOpen, onFlush }) {
+// flat: paint only the mosaic (colours, seams, opened glyphs) for use as a texture on the 3D heart; lighting,
+// outline and shine then come from the 3D scene instead of being baked in.
+export function createHeart(canvas, n, { mobile, isOpen, onFlush, flat = false }) {
   const Q = mobile ? 0.72 : 1;
   const W = Math.round(BASE_W * Q), H = Math.round(BASE_H * Q), SC = BASE_SC * Q;
   canvas.width = W; canvas.height = H;
@@ -111,13 +113,17 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush }) {
 
   function paintPixel(i, x, y) {
     const p = i * 4, o = owner[i];
-    if (o < 0) { px[p + 3] = 0; return; }
+    if (o < 0) {
+      if (flat) { px[p] = 150; px[p + 1] = 18; px[p + 2] = 52; px[p + 3] = 255; }   // opaque, so texture filtering never bleeds in black
+      else px[p + 3] = 0;
+      return;
+    }
     // shade the heart as ONE object (a single light direction across the whole shape), so the pieces read as
     // facets of one heart instead of separate fragments
     const lit = ((x - W / 2) * 0.55 + (y - H / 2) * 0.83) / (W * 0.36);   // >0 = lower-right of the heart
     const open = isOpen(cellPhoto[o]);
     let [r, g, b] = open ? [255, 228, 238] : base[o];
-    if (lit > 0.3) {                                   // one flat cel-shadow band + screentone dots
+    if (!flat && lit > 0.3) {                          // one flat cel-shadow band + screentone dots
       r *= 0.8; g *= open ? 0.82 : 0.58; b *= open ? 0.86 : 0.66;
       const gx = (x % dotP) - dotP / 2, gy = (y % dotP) - dotP / 2;
       if (gx * gx + gy * gy < dotP * 0.45) { r *= 0.9; g *= 0.82; b *= 0.87; }
@@ -166,6 +172,7 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush }) {
       miniHeart(ctx, s.x, s.y, sz); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "#fff"; star4(ctx, s.x + sz * 1.5, s.y - sz * 1.3, sz * 0.5); ctx.fill();
     }
+    if (flat) { if (onFlush) onFlush(); return; }
     ctx.save();
     heartPath(ctx); ctx.lineJoin = "round"; ctx.lineWidth = 7 * Q; ctx.strokeStyle = INK; ctx.stroke();   // inked rim
     ctx.restore();
@@ -203,5 +210,6 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush }) {
   function refresh(photoIdx) { paintCell(photoCell[photoIdx]); flush(); }
 
   paintAll(); flush();
-  return { cellPhoto, photoCell, cellAtUV, silhouette, setHover, refresh, redraw() { paintAll(); flush(); } };
+  const uvOf = (x, y) => { const [px, py] = toPx(x, y); return [px / W, 1 - py / H]; };   // heart-space point -> texture uv
+  return { cellPhoto, photoCell, cellAtUV, uvOf, silhouette, setHover, refresh, redraw() { paintAll(); flush(); } };
 }

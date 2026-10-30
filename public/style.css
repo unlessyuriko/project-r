@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --ink: #3a0a24;
   --pink: #ff3d6e;
   --pale: #ffe3ee;
@@ -56,38 +56,19 @@ h1 {
 .days:empty { display: none; }
 
 /* heart stage */
+/* heart stage: an empty placeholder; the 3D heart is drawn on #gl at this spot, and this element takes the pointer */
 .stage {
-  position: relative; display: grid; place-items: center;
+  position: relative;
   width: min(100%, 540px, calc((100dvh - 290px) * 1.113));
-  aspect-ratio: 1024 / 920; touch-action: manipulation;
+  aspect-ratio: 1024 / 920; touch-action: pan-y; cursor: grab;   /* horizontal drag spins the heart, vertical drag still scrolls */
 }
-.stage::before {                                    /* rotating burst behind the heart */
-  content: ""; position: absolute; inset: -22%; z-index: -1; border-radius: 50%; opacity: .32;
-  background: repeating-conic-gradient(from 0deg, #ffe3ee 0 4deg, transparent 4deg 14deg);
-  -webkit-mask: radial-gradient(circle, #000 28%, transparent 70%); mask: radial-gradient(circle, #000 28%, transparent 70%);
-  animation: spin 40s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-#spin { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; touch-action: pan-y; cursor: grab; }   /* horizontal drag spins the heart, vertical drag still scrolls */
-.face, .wall { position: absolute; inset: 0; }
-.face { backface-visibility: hidden; }
-.wall { background-size: 100% 100%; background-repeat: no-repeat; }
-.face.front { transform: translateZ(var(--d, 12px)); }
-.face.back { transform: translateZ(calc(var(--d, 12px) * -1)) rotateY(180deg); }
-#heartBack { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 20px rgba(255, 90, 140, .4)); }
-#heart {
-  width: 100%; height: 100%; display: block; touch-action: pan-y;
-  filter: drop-shadow(5px 8px 0 rgba(30, 6, 24, .55)) drop-shadow(0 0 26px rgba(255, 90, 140, .55));
-  animation: beat 1.7s infinite;                    /* squash-and-stretch heartbeat */
-  transform-origin: 50% 62%;
-}
+#gl { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+.nogl { color: #fff; font-weight: 700; text-align: center; padding: 20px; }
 @keyframes beat {
   0%, 62%, 100% { transform: scale(1, 1); }
   8% { transform: scale(1.055, .955); } 14% { transform: scale(.985, 1.03); }
   22% { transform: scale(1.03, .98); } 30% { transform: scale(1, 1); }
 }
-.stage.kick #heart { animation: kick .45s cubic-bezier(.3,1.6,.5,1), beat 1.7s .45s infinite; }
-@keyframes kick { 0% { transform: scale(1.1, .9); } 50% { transform: scale(.94, 1.07); } 100% { transform: scale(1); } }
 
 .hint {
   font-weight: 700; font-size: 13px; color: var(--ink); background: #fff;

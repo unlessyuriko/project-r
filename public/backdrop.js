@@ -1,5 +1,5 @@
-﻿// Anime backdrop: dusk sky, moon, twinkling stars, drifting clouds, a flat-colour Yangon skyline
-// (Shwedagon, Sule, colonial buildings, palms, Circular Railway) and falling hand-drawn red roses.
+// Anime backdrop: dusk sky, moon, twinkling stars, drifting clouds, a flat-colour Yangon skyline
+// (Shwedagon, Sule, colonial buildings, palms, Circular Railway); the snow is drawn by the 3D scene.
 import { INK, star4 } from "./heart.js";
 
 const TAU = Math.PI * 2;
@@ -12,55 +12,6 @@ const mulberry = (seed) => () => {
 const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
 
 // ---------- sprites ----------
-export function roseSprite(tone) {                   // [shadow red, mid red, bright red]; stemless red-velvet anime rose, bloom centred at (100,92)
-  const [dk, md, br] = tone;
-  const c = canvasOf(200, 180), g = c.getContext("2d");
-  g.lineJoin = "round"; g.lineCap = "round";
-  const draw = (d, fill, mirror) => {
-    g.save(); if (mirror) { g.translate(200, 0); g.scale(-1, 1); }
-    const p = new Path2D(d);
-    if (fill) { g.fillStyle = fill; g.fill(p); }
-    g.lineWidth = 5; g.strokeStyle = INK; g.stroke(p);
-    g.restore();
-  };
-  const line = (d, col, w, mirror) => {
-    g.save(); if (mirror) { g.translate(200, 0); g.scale(-1, 1); }
-    g.lineWidth = w; g.strokeStyle = col; g.stroke(new Path2D(d)); g.restore();
-  };
-  // back petals
-  for (const m of [false, true]) draw("M100 154 C50 150 28 100 40 60 C46 40 66 30 84 38 C70 72 78 126 100 154Z", dk, m);
-  // cup
-  draw("M36 80 C30 130 62 168 100 168 C138 168 170 130 164 80 C146 94 124 88 100 96 C76 88 54 94 36 80Z", md, false);
-  g.save(); g.clip(new Path2D("M36 80 C30 130 62 168 100 168 C138 168 170 130 164 80 C146 94 124 88 100 96 C76 88 54 94 36 80Z"));
-  g.fillStyle = "rgba(70,0,30,.38)"; g.beginPath(); g.ellipse(150, 150, 62, 70, 0, 0, TAU); g.fill();    // cel shadow
-  g.restore();
-  line("M100 100 C96 126 98 148 100 166", "rgba(58,10,36,.55)", 3.5, false);
-  line("M70 100 C64 124 70 146 84 160", "rgba(58,10,36,.45)", 3, false);
-  line("M130 100 C136 124 130 146 116 160", "rgba(58,10,36,.45)", 3, false);
-  // front wrapping petals
-  for (const m of [false, true]) draw("M36 80 C26 112 42 148 82 164 C62 134 58 106 72 88 C58 88 46 86 36 80Z", br, m);
-  g.fillStyle = dk; g.beginPath(); g.ellipse(100, 84, 52, 22, 0, 0, TAU); g.fill();     // dark inside of the cup, fills the gap under the dome
-  // top dome with scalloped lips
-  draw("M58 82 C52 40 78 14 100 16 C122 14 148 40 142 82 C128 68 114 64 100 70 C86 64 72 68 58 82Z", br, false);
-  g.save(); g.clip(new Path2D("M58 82 C52 40 78 14 100 16 C122 14 148 40 142 82 C128 68 114 64 100 70 C86 64 72 68 58 82Z"));
-  g.fillStyle = "rgba(70,0,30,.3)"; g.beginPath(); g.ellipse(142, 70, 40, 56, 0, 0, TAU); g.fill();
-  g.restore();
-  // inner bud: nested petals + spiral
-  line("M72 78 C70 50 88 36 100 38 C112 36 130 50 128 78", INK, 4.5, false);
-  line("M84 72 C84 56 94 48 102 50 C112 52 114 64 106 68 C98 72 94 62 100 58", INK, 4.5, false);
-  line("M58 82 C72 66 86 66 100 72 C114 66 128 66 142 82", INK, 4.5, false);
-  // glossy highlights
-  line("M66 66 C64 50 72 36 84 28", "rgba(255,150,170,.55)", 5, false);       // soft velvet sheen, not glossy white
-  line("M48 110 C46 124 52 138 62 148", "rgba(255,150,170,.4)", 4, false);
-  return c;
-}
-function petalSprite() {
-  const c = canvasOf(48, 64), g = c.getContext("2d");
-  g.beginPath(); g.moveTo(24, 4); g.bezierCurveTo(54, 18, 46, 56, 24, 60); g.bezierCurveTo(2, 56, -6, 18, 24, 4);
-  g.fillStyle = "#860d25"; g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke();
-  g.beginPath(); g.arc(18, 24, 10, Math.PI * 1.1, Math.PI * 1.7); g.lineWidth = 3; g.strokeStyle = "rgba(255,150,170,.5)"; g.stroke();
-  return c;
-}
 function cloudSprite() {
   const c = canvasOf(300, 120), g = c.getContext("2d");
   const blob = (col, dy) => {
@@ -150,13 +101,8 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   const ctx = canvas.getContext("2d");
   const dprMax = mobile ? 1.5 : 2;
   let w = 0, h = 0, dpr = 1, stat = null, t = 0, last = 0, trainY = 0, trainH = 20;
-  let paused = false, raf = 0, stars = [], clouds = [], roses = [], petals = [];
-  const cloudImg = cloudSprite(), petalImg = petalSprite();
-  const roseImgs = [
-    roseSprite(["#4e0715", "#7d0c22", "#a4132f"]),                // red velvet: deep crimson
-    roseSprite(["#560818", "#870d25", "#b01634"]),
-    roseSprite(["#470612", "#740b20", "#9a1129"]),
-  ];
+  let paused = false, raf = 0, stars = [], clouds = [];
+  const cloudImg = cloudSprite();
 
   function build() {
     const R = mulberry(11);
@@ -227,15 +173,6 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     const R = mulberry(5);
     stars = Array.from({ length: mobile ? 34 : 64 }, () => ({ x: R() * w, y: R() * h * 0.55, r: 1.5 + R() * 3.5, sp: 0.8 + R() * 2, ph: R() * TAU }));
     clouds = Array.from({ length: mobile ? 4 : 6 }, (_, i) => ({ x: R() * w, y: h * (0.06 + R() * 0.34), s: 0.45 + R() * 0.6, v: 5 + R() * 9, a: 0.5 + R() * 0.35, i }));
-    const rs = Math.max(0.3, Math.min(0.5, w / 1100)) * (mobile ? 0.8 : 1) * 1.3;
-    roses = Array.from({ length: mobile ? 9 : 15 }, () => ({
-      x: R() * w, y: R() * (h + 240) - 240, vy: 18 + R() * 26, ph: R() * TAU, sw: 14 + R() * 22,
-      rot: (R() - 0.5) * 0.9, rv: (R() - 0.5) * 0.5, s: rs * (0.55 + R() * 0.7), img: roseImgs[(R() * 3) | 0],
-    }));
-    petals = Array.from({ length: mobile ? 12 : 22 }, () => ({
-      x: R() * w, y: R() * (h + 100) - 100, vy: 28 + R() * 34, ph: R() * TAU, sw: 20 + R() * 30,
-      rot: R() * TAU, rv: (R() - 0.5) * 2.4, s: 0.35 + R() * 0.35,
-    }));
   }
 
   function train(g) {
@@ -276,18 +213,6 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     ctx.globalAlpha = 1;
     train(ctx);
 
-    for (const p of petals) {                          // falling petals
-      p.y += p.vy * dt; p.rot += p.rv * dt;
-      if (p.y > h + 60) { p.y = -60; p.x = Math.random() * w; }
-      ctx.save(); ctx.translate(p.x + Math.sin(t * 0.8 + p.ph) * p.sw, p.y); ctx.rotate(p.rot);
-      ctx.drawImage(petalImg, -24 * p.s, -32 * p.s, 48 * p.s, 64 * p.s); ctx.restore();
-    }
-    for (const r of roses) {                           // falling red roses
-      r.y += r.vy * dt; r.rot += r.rv * dt * 0.3;
-      if (r.y > h + 140) { r.y = -200; r.x = Math.random() * w; }
-      ctx.save(); ctx.translate(r.x + Math.sin(t * 0.6 + r.ph) * r.sw, r.y); ctx.rotate(r.rot + Math.sin(t * 0.9 + r.ph) * 0.18);
-      ctx.drawImage(r.img, -100 * r.s, -92 * r.s, 200 * r.s, 180 * r.s); ctx.restore();
-    }
     const hr = getRect && getRect();                   // sparkles orbiting the heart
     if (hr && hr.width) {
       const cx = hr.left + hr.width / 2, cy = hr.top + hr.height / 2;
