@@ -62,19 +62,33 @@ function cloudSprite() {
 
 // ---------- skyline shapes (flat colour + one shadow band + inked outline) ----------
 function stupa(g, x, base, s, prof, c) {
-  g.beginPath();
-  prof.forEach(([r, y], i) => { const X = x - r * s, Y = base - y * s; i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
-  for (let i = prof.length - 1; i >= 0; i--) g.lineTo(x + prof[i][0] * s, base - prof[i][1] * s);
-  g.closePath();
-  g.fillStyle = c.fill; g.fill();
-  g.save(); g.clip(); g.fillStyle = c.shade; g.fillRect(x + s * 0.5, base - 100 * s, 200 * s, 110 * s); g.restore();
-  g.lineJoin = "round"; g.lineWidth = Math.max(1.5, s * 0.55); g.strokeStyle = c.line; g.stroke();
+  const path = new Path2D();
+  prof.forEach(([r, y], i) => { const X = x - r * s, Y = base - y * s; i ? path.lineTo(X, Y) : path.moveTo(X, Y); });
+  for (let i = prof.length - 1; i >= 0; i--) path.lineTo(x + prof[i][0] * s, base - prof[i][1] * s);
+  path.closePath();
+  g.fillStyle = c.fill; g.fill(path);
+  g.save(); g.clip(path);
+  if (c.hi) { g.fillStyle = c.hi; g.fillRect(x - 60 * s, base - 110 * s, 60 * s - s * 0.4, 120 * s); }   // lit left side
+  g.fillStyle = c.shade; g.fillRect(x + s * 0.5, base - 110 * s, 200 * s, 120 * s);                  // cel shadow right side
+  if (c.bands) {                                    // gold ring mouldings
+    g.strokeStyle = c.line; g.lineWidth = Math.max(1, s * 0.3);
+    for (const y of c.bands) { g.beginPath(); g.moveTo(x - 60 * s, base - y * s); g.lineTo(x + 60 * s, base - y * s); g.stroke(); }
+  }
+  g.restore();
+  g.lineJoin = "round"; g.lineWidth = Math.max(1.5, s * 0.55); g.strokeStyle = c.line; g.stroke(path);
 }
+// Shwedagon, height 100: stepped square terraces, octagonal terraces, concave bell, ring mouldings,
+// inverted bowl, lotus petals, tapering spire rings, tiered hti umbrella, vane and diamond bud.
+const SHW_BANDS = [];
 const shwProf = () => {
-  const p = [[17, 0], [17, 2.2], [14.5, 2.2], [14.5, 4.4], [12, 4.4], [12, 6.5]];
-  for (let i = 0; i <= 12; i++) { const u = i / 12; p.push([2.6 + 6.4 * Math.pow(1 - u, 1.15), 6.5 + 17 * u]); }
-  for (let i = 0; i <= 30; i++) { const u = i / 30; let r = 2.6 * Math.pow(1 - u, 1.25) + 0.55; if (i % 3 === 0) r *= 1.18; p.push([r, 23.5 + 30 * u]); }
-  p.push([1.8, 53.5], [1.8, 54.4], [1, 54.4], [1, 57], [0, 60]);
+  const p = [[40, 0], [40, 3], [35, 3], [35, 6], [30, 6], [30, 9], [23, 9], [23, 12], [20.5, 12], [20.5, 15]];
+  for (let i = 0; i <= 28; i++) { const u = i / 28; p.push([8.4 + 11.6 * Math.pow(1 - u, 1.7), 15 + 31 * u]); }   // bell
+  for (const [r, y] of [[9.6, 46], [9.6, 47.2], [8.2, 47.2], [8.2, 48.4], [9.2, 48.4], [9.2, 49.6], [7.8, 49.6], [7.8, 51]]) { p.push([r, y]); if (y > 47) SHW_BANDS.push(y); }
+  for (let i = 0; i <= 8; i++) { const u = i / 8; p.push([7.8 + 1.6 * Math.sin(u * Math.PI * 0.9), 51 + 6 * u]); }  // inverted bowl
+  for (let i = 0; i <= 8; i++) { const u = i / 8; p.push([8.6 - 4.2 * Math.pow(u, 0.8), 57 + 4 * u]); SHW_BANDS.push(57 + 4 * u); }   // lotus petals
+  for (let i = 0; i <= 26; i++) { const u = i / 26; let r = 4.2 * Math.pow(1 - u, 1.3) + 1.7; if (i % 2) r *= 0.9; p.push([r, 61 + 19 * u]); if (i % 2 === 0) SHW_BANDS.push(61 + 19 * u); }   // spire rings
+  for (let k = 0; k < 4; k++) { const y = 80 + k * 3.4; p.push([5.3 - k * 0.9, y], [4.6 - k * 0.9, y + 0.8], [2.2, y + 1.8]); }     // hti tiers
+  p.push([0.7, 93.6], [1.5, 94.6], [1.7, 96.4], [0.8, 98.4], [0, 100]);                                                              // vane + bud
   return p;
 };
 const suleProf = () => {
@@ -166,18 +180,22 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     };
     const gold = { fill: "#d6aa5c", shade: "#a37a3c", line: "#2a1250" };
     const farBase = h * 0.72, midBase = h * 0.8, nearBase = h * 0.88;
+    const sx = w * (wide ? 0.17 : 0.3), ss = Math.min((h * 0.5) / 100, sx / 30);   // beside the heart so the whole pagoda reads
+    const sg = g.createRadialGradient(sx, farBase - 50 * ss, 0, sx, farBase - 50 * ss, 80 * ss);   // golden glow around the pagoda
+    sg.addColorStop(0, "rgba(255,205,110,.45)"); sg.addColorStop(1, "rgba(255,205,110,0)");
+    g.fillStyle = sg; g.fillRect(0, 0, w, h);
     layer((l) => {                                     // far: Shwedagon
-      const s = (h * 0.4) / 60, x = w * (wide ? 0.22 : 0.28);
-      for (const dx of [-26, -19, 19, 26]) stupa(l, x + dx * s, farBase, s, MINI, gold);
-      stupa(l, x, farBase, s, SHW, gold);
+      const shw = { fill: "#f2c25a", hi: "#ffe28a", shade: "#c28a2c", line: "#2a1250", bands: SHW_BANDS };
+      for (const [dx, hs] of [[-31, 0.34], [-24, 0.26], [24, 0.26], [31, 0.34]]) stupa(l, sx + dx * ss, farBase - 9 * ss, ss * hs * 2.4, MINI, { ...gold, hi: "#ffe28a", fill: "#f2c25a", shade: "#c28a2c" });
+      stupa(l, sx, farBase, ss, SHW, shw);
       l.fillStyle = "#3d2070"; l.fillRect(0, farBase - 2, w, h);
-    }, 0.38);
+    }, 0.08);
     layer((l) => {                                     // mid: Sule + colonial rows
       const pal = { wall: "#4a2a82", shade: "#3a2070", roof: "#321a60", window: "#24123f", line: "#220f45", gold: "#d6aa5c" };
       const s = (h * 0.27) / 41;
       stupa(l, w * (wide ? 0.8 : 0.82), midBase, s, SULE, { fill: "#cf9f55", shade: "#9a7238", line: "#220f45" });
       const bh = h * 0.12;
-      [[0.06, 0.55, true], [0.16, 0.42, false], [0.27, 0.38, false], [0.9, 0.5, true], [0.97, 0.36, false]].forEach(([fx, ws, tw]) => colonial(l, w * fx, midBase, bh * 1.9 * ws * 1.4, bh * (0.8 + ws * 0.4), tw, pal, R));
+      [[0.46, 0.45, false], [0.57, 0.5, true], [0.68, 0.4, false], [0.9, 0.5, true], [0.97, 0.36, false]].forEach(([fx, ws, tw]) => colonial(l, w * fx, midBase, bh * 1.9 * ws * 1.4, bh * (0.8 + ws * 0.4), tw, pal, R));
       l.fillStyle = "#2c1658"; l.fillRect(0, midBase - 2, w, h);
     }, 0.2);
     layer((l) => {                                     // near: palms + ground
