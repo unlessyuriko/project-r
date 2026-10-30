@@ -262,9 +262,14 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   }
 
   let puffs = [], puffAt = 0;
-  function wheel(g, x, y, r, hub) {
+  function wheel(g, x, y, r, hub) {                      // small spoked wheel that turns with the train
+    const ang = (t * 42) / r; g.save();
     g.fillStyle = "#140a1c"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
-    g.fillStyle = hub; g.beginPath(); g.arc(x, y, r * 0.45, 0, TAU); g.fill();
+    g.fillStyle = hub; g.beginPath(); g.arc(x, y, r * 0.78, 0, TAU); g.fill();
+    g.strokeStyle = "#140a1c"; g.lineWidth = Math.max(1, r * 0.14); g.lineCap = "round";
+    for (let k = 0; k < 6; k++) { const q = ang + (k * TAU) / 6; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(q) * r * 0.76, y + Math.sin(q) * r * 0.76); g.stroke(); }
+    g.fillStyle = "#e8b04a"; g.beginPath(); g.arc(x, y, r * 0.24, 0, TAU); g.fill();
+    g.restore();
   }
   // a big spoked driving wheel; returns the crank pin so the connecting rod can follow it
   function driver(g, x, y, r, ang) {
