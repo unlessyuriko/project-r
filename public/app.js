@@ -150,17 +150,48 @@ function gate() {
 let ang = 0, vel = 0, dragging = false, idleSince = 0, flip = null;   // flip = scripted full turn after a tap
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const PERSPECTIVE = 1100;
+let lift = 0;                                        // px toward the viewer: the heart rises while it turns
 function applySpin() {
-  const sp = $("#spin");
-  sp.style.transform = `perspective(${PERSPECTIVE}px) rotateY(${ang.toFixed(2)}deg)`;
-  sp.style.filter = `brightness(${(1 - 0.32 * Math.abs(Math.sin((ang * Math.PI) / 180))).toFixed(3)})`;   // edge-on = darker
+  $("#spin").style.transform = `perspective(${PERSPECTIVE}px) translateZ(${lift.toFixed(1)}px) rotateY(${ang.toFixed(2)}deg)`;
+}
+// The heart is a solid: a front face, a back face and a stack of wall layers in between (see buildSolid).
+function buildSolid() {
+  const sp = $("#spin"), st = $("#stage");
+  const set = () => st.style.setProperty("--d", Math.max(8, st.clientWidth * 0.032).toFixed(1) + "px");
+  set(); new ResizeObserver(set).observe(st);
+  const wall = heart.silhouette(0.4, "#f5b6cb").toDataURL();
+  const N = 16;
+  for (let k = 0; k < N; k++) {                      // stacked cut-outs make the thick sticker edge
+    const w = document.createElement("div");
+    w.className = "wall";
+    w.style.backgroundImage = `url(${wall})`;
+    w.style.transform = `translateZ(calc(var(--d) * ${(1 - (2 * k) / (N - 1)).toFixed(3)}))`;
+    w.style.filter = `brightness(${(0.78 + 0.22 * Math.abs(1 - (2 * k) / (N - 1))).toFixed(2)})`;
+    sp.insertBefore(w, sp.firstChild);
+  }
+  const back = document.createElement("div");
+  back.className = "face back";
+  back.appendChild(backCanvas);
+  sp.appendChild(back);
+  drawBack();
+}
+const backCanvas = document.createElement("canvas");
+backCanvas.id = "heartBack";
+function drawBack() {                                // the back shows the mosaic too (a copy of the front)
+  const src = $("#heart");
+  const w = Math.round(src.width * 0.6), h = Math.round(src.height * 0.6);
+  if (backCanvas.width !== w) { backCanvas.width = w; backCanvas.height = h; }
+  const g = backCanvas.getContext("2d");
+  g.clearRect(0, 0, w, h);
+  g.drawImage(src, 0, 0, w, h);
 }
 function spinLoop() {
   requestAnimationFrame(spinLoop);
   if (flip) {
     const t = Math.min(1, (performance.now() - flip.t0) / flip.ms);
     ang = flip.from + 360 * easeInOut(t);
-    if (t >= 1) { ang = flip.from + 360; flip = null; idleSince = performance.now(); }
+    lift = 90 * Math.sin(Math.PI * t);               // rises toward you mid-turn, then settles back
+    if (t >= 1) { ang = flip.from + 360; lift = 0; flip = null; idleSince = performance.now(); }
     applySpin();
     return;
   }
@@ -179,8 +210,11 @@ function spinLoop() {
 // screen point -> position on the heart, through the CSS 3D transform (a homography on the heart's plane)
 function pick(clientX, clientY) {
   const st = $("#stage"), r = st.getBoundingClientRect();
-  const m = new DOMMatrix(getComputedStyle($("#spin")).transform);
-  const H = [[m.m11, m.m21, m.m41], [m.m12, m.m22, m.m42], [m.m14, m.m24, m.m44]];
+  const depth = parseFloat(st.style.getPropertyValue("--d")) || 0;
+  const frontFacing = Math.cos((ang * Math.PI) / 180) >= 0;
+  let m = new DOMMatrix(getComputedStyle($("#spin")).transform);
+  m = frontFacing ? m.translate(0, 0, depth) : m.translate(0, 0, -depth).rotate(0, 180, 0);   // the plane of the visible face
+  const H =[[m.m11, m.m21, m.m41], [m.m12, m.m22, m.m42], [m.m14, m.m24, m.m44]];
   const [a, b, c, d, e, f, g, h, i] = [H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]];
   const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
   if (Math.abs(det) < 1e-9) return -1;
@@ -196,7 +230,7 @@ function pick(clientX, clientY) {
   return heart.cellAtUV(0.5 + lx / r.width, 0.5 + ly / r.height);
 }
 function bindHeart() {
-  const cv = $("#heart"), st = $("#stage");
+  const cv = $("#spin"), st = $("#stage");           // events on the whole solid, so the back and edge respond too
   let down = null, moved = false;
   cv.addEventListener("pointerdown", (e) => {
     if (flip) return;                                // busy turning after a tap
@@ -266,7 +300,8 @@ async function init() {
   await new Promise((r) => setTimeout(r, 40));      // let the loader paint before the heavy mosaic maths
   const saved = safe(() => JSON.parse(localStorage.getItem(STORE + photos.length) || "[]")) || [];
   opened = new Set(saved.filter((p) => p < photos.length));
-  heart = createHeart($("#heart"), photos.length, { mobile: MOBILE, isOpen: (p) => opened.has(p) });
+  heart = createHeart($("#heart"), photos.length, { mobile: MOBILE, isOpen: (p) => opened.has(p), onFlush: () => drawBack() });
+  buildSolid();
   backdrop = createBackdrop($("#bgc"), { mobile: MOBILE, getRect: () => $("#stage").getBoundingClientRect() });
   addEventListener("resize", () => backdrop.resize());
   bindHeart();

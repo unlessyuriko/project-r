@@ -26,7 +26,7 @@ export function miniHeart(g, x, y, s) {
   g.closePath();
 }
 
-export function createHeart(canvas, n, { mobile, isOpen }) {
+export function createHeart(canvas, n, { mobile, isOpen, onFlush }) {
   const Q = mobile ? 0.72 : 1;
   const W = Math.round(BASE_W * Q), H = Math.round(BASE_H * Q), SC = BASE_SC * Q;
   canvas.width = W; canvas.height = H;
@@ -176,6 +176,16 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
     ctx.lineWidth = 24 * Q; ctx.strokeStyle = INK; ctx.stroke();
     ctx.lineWidth = 44 * Q; ctx.strokeStyle = "#fff"; ctx.stroke();
     ctx.restore();
+    if (onFlush) onFlush();
+  }
+  function silhouette(k, fill) {                       // flat cut-out of the heart + sticker rim, used for the solid's side wall
+    const c = document.createElement("canvas");
+    c.width = Math.round(W * k); c.height = Math.round(H * k);
+    const g = c.getContext("2d");
+    g.scale(k, k); heartPath(g);
+    g.fillStyle = fill; g.fill();
+    g.lineJoin = "round"; g.lineWidth = 44 * Q; g.strokeStyle = fill; g.stroke();
+    return c;
   }
 
   function cellAtUV(u, v) {                            // u, v in 0..1 across the (unrotated) heart canvas
@@ -193,5 +203,5 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
   function refresh(photoIdx) { paintCell(photoCell[photoIdx]); flush(); }
 
   paintAll(); flush();
-  return { cellPhoto, photoCell, cellAtUV, setHover, refresh, redraw() { paintAll(); flush(); } };
+  return { cellPhoto, photoCell, cellAtUV, silhouette, setHover, refresh, redraw() { paintAll(); flush(); } };
 }
