@@ -71,7 +71,9 @@ function colonial(g, x, base, bw, bh, tower, pal, rnd) {
   const cw = bw / cols, ww = cw * 0.4, wh = (bh * 0.8) / rows * 0.62;
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const wx = x - bw / 2 + cw * c + (cw - ww) / 2, wy = base - bh + bh * 0.16 + r * ((bh * 0.8) / rows);
-    g.fillStyle = rnd() < 0.4 ? "#ffd27a" : pal.window;
+    const lit = rnd() < 0.66;
+    g.fillStyle = lit ? "#ffd27a" : pal.window;
+    if (lit && pal.wins) pal.wins.push([wx + ww / 2, wy + wh * 0.55, Math.max(ww, wh), rnd() * 6.28, 0.6 + rnd() * 1.6]);
     g.beginPath(); g.moveTo(wx, wy + wh); g.lineTo(wx, wy + ww / 2); g.arc(wx + ww / 2, wy + ww / 2, ww / 2, Math.PI, 0); g.lineTo(wx + ww, wy + wh); g.closePath(); g.fill();
   }
   if (tower) {                                        // pyatthat: stacked Burmese roof tiers
@@ -84,6 +86,28 @@ function colonial(g, x, base, bw, bh, tower, pal, rnd) {
       y -= th * 2.1;
     }
     g.fillStyle = pal.gold; g.fillRect(x - 1.5, y - bh * 0.22, 3, bh * 0.22);
+  }
+}
+function glowSprite() {
+  const c = canvasOf(64, 64), g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  r.addColorStop(0, "rgba(255,226,150,1)"); r.addColorStop(0.25, "rgba(255,200,110,.45)"); r.addColorStop(1, "rgba(255,190,100,0)");
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+  return c;
+}
+function tower(g, x, base, bw, bh, pal, rnd, wins, crown) {
+  g.lineJoin = "round"; g.lineWidth = 1.6; g.strokeStyle = pal.line;
+  g.fillStyle = pal.wall; g.fillRect(x - bw / 2, base - bh, bw, bh); g.strokeRect(x - bw / 2, base - bh, bw, bh);
+  g.fillStyle = pal.shade; g.fillRect(x + bw * 0.12, base - bh, bw * 0.38, bh);
+  if (crown === 1) { g.fillStyle = pal.wall; g.fillRect(x - bw * 0.3, base - bh - bw * 0.22, bw * 0.6, bw * 0.22); g.strokeRect(x - bw * 0.3, base - bh - bw * 0.22, bw * 0.6, bw * 0.22); }
+  if (crown === 2) { g.beginPath(); g.moveTo(x - bw / 2, base - bh); g.lineTo(x, base - bh - bw * 0.7); g.lineTo(x + bw / 2, base - bh); g.closePath(); g.fillStyle = pal.shade; g.fill(); g.stroke(); }
+  if (crown === 3) { g.fillStyle = pal.line; g.fillRect(x - 1, base - bh - bw * 0.9, 2, bw * 0.9); g.fillStyle = "#ff6f8f"; g.fillRect(x - 2, base - bh - bw * 0.9 - 3, 4, 4); }
+  const ww = Math.max(3, bw * 0.13), gap = ww * 1.9, cols = Math.max(2, Math.floor((bw - ww) / gap)), rows = Math.floor((bh - 14) / (ww * 2.3));
+  const x0 = x - bw / 2 + (bw - (cols - 1) * gap - ww) / 2;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const wx = x0 + c * gap, wy = base - bh + 9 + r * ww * 2.3, lit = rnd() < 0.55;
+    g.fillStyle = lit ? (rnd() < 0.3 ? "#ffb6c8" : "#ffd27a") : pal.window;
+    g.fillRect(wx, wy, ww, ww * 1.3);
+    if (lit && rnd() < 0.1 && wins) wins.push([wx + ww / 2, wy + ww * 0.65, ww * 1.2, rnd() * 6.28, 0.5 + rnd() * 1.5]);
   }
 }
 function palm(g, x, base, ht, color) {
@@ -102,7 +126,12 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   const dprMax = mobile ? 1.5 : 2;
   let w = 0, h = 0, dpr = 1, stat = null, t = 0, last = 0, trainY = 0, trainH = 20;
   let paused = false, raf = 0, stars = [], clouds = [];
-  const cloudImg = cloudSprite();
+  const cloudImg = cloudSprite(), glow = glowSprite();
+  const billImg = new Image();                          // the couple's picture on the rooftop billboard
+  billImg.onload = () => { if (w) build(); };
+  billImg.src = "billboard.jpg";
+  let bill = null;
+  let wins = [], bulbs = [], lantern = [], lake = { y0: 0, mx: 0, sx: 0, lh: 0 };
 
   function build() {
     const R = mulberry(11);
@@ -137,30 +166,85 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       g.drawImage(lc, 0, 0, w, h);
     };
     const gold = { fill: "#d6aa5c", shade: "#a37a3c", line: "#2a1250" };
-    const farBase = h * 0.72, midBase = h * 0.8, nearBase = h * 0.88;
+    const farBase = h * 0.68, midBase = h * 0.75, nearBase = h * 0.82;
+    wins = []; bulbs = [];
     const sx = w * (wide ? 0.17 : 0.3), ss = Math.min((h * 0.5) / 100, sx / 30);   // beside the heart so the whole pagoda reads
     const sg = g.createRadialGradient(sx, farBase - 50 * ss, 0, sx, farBase - 50 * ss, 80 * ss);   // golden glow around the pagoda
     sg.addColorStop(0, "rgba(255,205,110,.45)"); sg.addColorStop(1, "rgba(255,205,110,0)");
     g.fillStyle = sg; g.fillRect(0, 0, w, h);
-    layer((l) => {                                     // far: Shwedagon
-      const shw = { fill: "#f2c25a", hi: "#ffe28a", shade: "#c28a2c", line: "#2a1250", bands: SHW_BANDS };
-      for (const [dx, hs] of [[-31, 0.34], [-24, 0.26], [24, 0.26], [31, 0.34]]) stupa(l, sx + dx * ss, farBase - 9 * ss, ss * hs * 2.4, MINI, { ...gold, hi: "#ffe28a", fill: "#f2c25a", shade: "#c28a2c" });
-      stupa(l, sx, farBase, ss, SHW, shw);
+    layer((l) => {                                     // far: tall city towers
+      const tp = { wall: "#3b2a7a", shade: "#2f2166", line: "#241552", window: "#2a1b5c" };
+      const n = wide ? 15 : 9, rt = mulberry(23);
+      for (let i = 0; i < n; i++) {
+        const fx = (i + 0.5) / n + (rt() - 0.5) * 0.02, bw = (w / n) * (0.7 + rt() * 0.45);
+        const tall = Math.exp(-Math.pow((fx - sx / w) / 0.3, 2)) * 0.5 + 0.5, bh = h * (0.14 + rt() * 0.16) * (0.65 + tall * 0.7);
+        tower(l, w * fx, farBase, bw, bh, tp, rt, wins, bh > h * 0.26 ? 3 : Math.floor(rt() * 3));
+      }
       l.fillStyle = "#3d2070"; l.fillRect(0, farBase - 2, w, h);
-    }, 0.08);
+    }, 0.1);
     layer((l) => {                                     // mid: Sule + colonial rows
-      const pal = { wall: "#4a2a82", shade: "#3a2070", roof: "#321a60", window: "#24123f", line: "#220f45", gold: "#d6aa5c" };
+      const pal = { wins, wall: "#4a2a82", shade: "#3a2070", roof: "#321a60", window: "#24123f", line: "#220f45", gold: "#d6aa5c" };
       const s = (h * 0.27) / 41;
-      stupa(l, w * (wide ? 0.8 : 0.82), midBase, s, SULE, { fill: "#cf9f55", shade: "#9a7238", line: "#220f45" });
       const bh = h * 0.12;
       [[0.46, 0.45, false], [0.57, 0.5, true], [0.68, 0.4, false], [0.9, 0.5, true], [0.97, 0.36, false]].forEach(([fx, ws, tw]) => colonial(l, w * fx, midBase, bh * 1.9 * ws * 1.4, bh * (0.8 + ws * 0.4), tw, pal, R));
       l.fillStyle = "#2c1658"; l.fillRect(0, midBase - 2, w, h);
+      // fairy lights: swags between the roofs; bulbs are drawn (and twinkled) per frame
+      const top = (ws) => midBase - bh * (0.8 + ws * 0.4) * 1.12;
+      const pts = [[w * 0.05, nearBase - h * 0.2], [w * 0.46, top(0.45)], [w * 0.57, top(0.5) - bh * 0.35], [w * 0.68, top(0.4)], [w * 0.9, top(0.5) - bh * 0.35], [w * 1.02, top(0.36)]];
+      l.strokeStyle = "rgba(20,8,44,.75)"; l.lineWidth = 1.2;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [x1, y1] = pts[i], [x2, y2] = pts[i + 1], sag = Math.min(h * 0.07, Math.abs(x2 - x1) * 0.16);
+        const N = Math.max(4, Math.round(Math.abs(x2 - x1) / 15));
+        l.beginPath(); l.moveTo(x1, y1);
+        for (let k = 1; k <= N; k++) { const u = k / N; l.lineTo(x1 + (x2 - x1) * u, y1 + (y2 - y1) * u + Math.sin(u * Math.PI) * sag); }
+        l.stroke();
+        for (let k = 1; k < N; k++) { const u = k / N; bulbs.push([x1 + (x2 - x1) * u, y1 + (y2 - y1) * u + Math.sin(u * Math.PI) * sag + 3, (i + k) % 3, R() * 6.28]); }
+      }
     }, 0.2);
     layer((l) => {                                     // near: palms + ground
       [[0.03, 0.26], [0.1, 0.19], [0.93, 0.24], [0.99, 0.17], [0.5, 0.12], [0.63, 0.14]].forEach(([fx, hf]) => palm(l, w * fx, nearBase + 4, h * hf, "#1d0e3a"));
-      l.fillStyle = "#1d0e3a"; l.fillRect(0, nearBase, w, h);
+      l.fillStyle = "#1d0e3a"; l.fillRect(0, nearBase, w, 9);                // the bank; the lake starts below it
       l.fillStyle = "#2a1650"; l.fillRect(0, nearBase, w, 3);
     }, 0.05);
+    // billboard: a tall tower with the couple's picture on top, lit by a row of lamps
+    bill = null;
+    if (billImg.complete && billImg.naturalWidth) {
+      const bh2 = wide ? Math.min(h * 0.25, w * 0.62) : Math.min(h * 0.17, w * 0.3 * 1.5), bw2 = bh2 * 0.667, bx = wide ? Math.max(bw2 * 0.62, w * 0.17) : w * 0.8, by = h * (wide ? 0.13 : 0.42);
+      const fh = bh2 + bw2 * 0.2, frameB = by + fh, towerTop = frameB + bh2 * 0.1, rb = mulberry(31);
+      tower(g, bx, farBase, bw2 * 0.78, farBase - towerTop, { wall: "#3b2a7a", shade: "#2f2166", line: "#241552", window: "#2a1b5c" }, rb, wins, 0);
+      g.fillStyle = "#1c0f3e"; g.fillRect(bx - bw2 * 0.28, frameB, 3, towerTop - frameB + 2); g.fillRect(bx + bw2 * 0.28 - 3, frameB, 3, towerTop - frameB + 2);   // posts
+      const fx = bx - bw2 / 2 - 6, fw = bw2 + 12;
+      const bg2 = g.createRadialGradient(bx, by + fh / 2, 0, bx, by + fh / 2, bw2 * 1.5);                // warm light spilling around the sign
+      bg2.addColorStop(0, "rgba(255,200,140,.3)"); bg2.addColorStop(1, "rgba(255,200,140,0)");
+      g.fillStyle = bg2; g.fillRect(bx - bw2 * 1.6, by - bw2 * 0.6, bw2 * 3.2, fh + bw2 * 1.2);
+      g.fillStyle = "#1c0f3e"; g.beginPath(); g.roundRect(fx, by, fw, fh, 8); g.fill();
+      g.strokeStyle = "#ffd27a"; g.lineWidth = 2; g.beginPath(); g.roundRect(fx + 2, by + 2, fw - 4, fh - 4, 7); g.stroke();
+      g.save(); g.beginPath(); g.roundRect(bx - bw2 / 2, by + 6, bw2, bh2 - 6, 5); g.clip();
+      const ir = billImg.naturalWidth / billImg.naturalHeight, tw = bw2, th = tw / ir;
+      g.drawImage(billImg, bx - bw2 / 2, by + 6 + (bh2 - 6 - th) / 2, tw, th); g.restore();
+      const fs = Math.max(8, bw2 * 0.072);                                                              // caption plate under the picture
+      g.fillStyle = "#fff3d6"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.font = `900 ${fs}px "Zen Maru Gothic", system-ui, sans-serif`;
+      g.fillText("Ye Pyae ♥ May Thu", bx, by + bh2 + (fh - bh2) * 0.36);
+      g.fillStyle = "#ffb6c8"; g.font = `700 ${fs * 0.72}px "Zen Maru Gothic", system-ui, sans-serif`;
+      g.fillText("Better together · since 1 Aug 2026", bx, by + bh2 + (fh - bh2) * 0.74);
+      for (let i = 0; i < 7; i++) bulbs.push([fx + 6 + (fw - 12) * (i / 6), by - 2, i % 3, rb() * 6.28]);   // lamps along the top edge
+      bill = { x: bx, y: by + fh / 2, r: bw2 };
+    }
+    // lake: a mirrored copy of the scene above the shore, tinted, with ripples
+    const y0 = nearBase + 9, lh = h - y0;
+    const snap = canvasOf(w * dpr, h * dpr); snap.getContext("2d").drawImage(stat, 0, 0);
+    const wg = g.createLinearGradient(0, y0, 0, h); wg.addColorStop(0, "#43267f"); wg.addColorStop(1, "#150a33");
+    g.fillStyle = wg; g.fillRect(0, y0, w, lh);
+    g.save(); g.beginPath(); g.rect(0, y0, w, lh); g.clip();
+    g.globalAlpha = 0.4; g.translate(0, 2 * y0); g.scale(1, -1); g.drawImage(snap, 0, 0, w, h); g.restore();
+    const wt = g.createLinearGradient(0, y0, 0, h); wt.addColorStop(0, "rgba(60,30,120,.15)"); wt.addColorStop(1, "rgba(14,6,34,.7)");
+    g.fillStyle = wt; g.fillRect(0, y0, w, lh);
+    g.strokeStyle = "rgba(255,225,200,.14)"; g.lineWidth = 1.2;
+    for (let i = 0; i < 26; i++) { const ry = y0 + 6 + R() * (lh - 8), rx = R() * w, rl = 14 + R() * 46; g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + rl, ry); g.stroke(); }
+    g.fillStyle = "rgba(255,200,150,.35)"; g.fillRect(0, y0, w, 1.5);
+    lake = { y0, mx, sx, lh };
+    lantern = Array.from({ length: mobile ? 4 : 7 }, () => ({ x: R() * w, y: R() * h, s: 0.7 + R() * 0.6, v: 10 + R() * 12, ph: R() * 6.28, hue: R() < 0.5 ? 0 : 1 }));
     trainY = nearBase; trainH = Math.max(26, h * 0.06);
   }
 
@@ -212,6 +296,40 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     }
     ctx.globalAlpha = 1;
     train(ctx);
+    ctx.globalCompositeOperation = "lighter";
+    for (const [x, y, sz, ph, sp] of wins) {           // lit windows breathe
+      const k = 0.5 + 0.5 * Math.sin(t * sp + ph), fl = Math.sin(t * 7 + ph * 9) > 0.985 ? 0.25 : 1;
+      ctx.globalAlpha = (0.12 + 0.28 * k) * fl; const r = Math.min(sz * 2.2, 13); ctx.drawImage(glow, x - r, y - r, r * 2, r * 2);
+    }
+    for (const [x, y, c, ph] of bulbs) {               // fairy lights twinkle
+      const k = 0.5 + 0.5 * Math.sin(t * 2.2 + ph);
+      ctx.globalAlpha = 0.45 + 0.55 * k; const r = 4 + k * 4;
+      ctx.drawImage(glow, x - r, y - r, r * 2, r * 2);
+      if (c === 1) { ctx.globalAlpha = 0.25 * k; ctx.fillStyle = "#ff7fb0"; ctx.beginPath(); ctx.arc(x, y, r * 0.8, 0, TAU); ctx.fill(); }
+    }
+    if (bill) {                                        // the billboard glows gently
+      ctx.globalAlpha = 0.07 + 0.05 * Math.sin(t * 1.3); const r = bill.r * 1.4; ctx.drawImage(glow, bill.x - r, bill.y - r, r * 2, r * 2);
+    }
+    if (lake.lh) {                                     // moon and city lights shimmer on the water
+      for (const [cx, rgb, wmax] of [[lake.mx, "255,244,205", 70], [lake.sx, "255,205,110", 54]]) {
+        for (let k = 0; k < 9; k++) {
+          const yy = lake.y0 + 5 + (k / 9) * (lake.lh - 8), ww = wmax * (1 - k / 14) * (0.55 + 0.45 * Math.sin(t * 1.6 + k * 1.3));
+          ctx.globalAlpha = 0.5 * (1 - k / 11); ctx.fillStyle = "rgb(" + rgb + ")";
+          ctx.fillRect(cx - ww / 2 + Math.sin(t * 1.2 + k) * 7, yy, Math.max(4, ww), 1.8);
+        }
+      }
+    }
+    for (const L of lantern) {                         // paper lanterns drift up from the water
+      L.y -= L.v * dt * 0.5; if (L.y < -40) { L.y = h + 20; L.x = Math.random() * w; }
+      const x = L.x + Math.sin(t * 0.6 + L.ph) * 16, sz = 15 * L.s, fade = Math.min(1, Math.max(0, L.y / (h * 0.35)));
+      ctx.globalAlpha = 0.5 * fade; const r = sz * 3; ctx.drawImage(glow, x - r, L.y - r, r * 2, r * 2);
+      ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 0.95 * fade;
+      ctx.fillStyle = L.hue ? "#ff9ab4" : "#ffc46b"; ctx.strokeStyle = "rgba(58,10,36,.7)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(x - sz * 0.5, L.y - sz * 0.65, sz, sz * 1.3, sz * 0.3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(255,246,200,.8)"; ctx.fillRect(x - sz * 0.2, L.y - sz * 0.3, sz * 0.4, sz * 0.6);
+      ctx.globalCompositeOperation = "lighter";
+    }
+    ctx.globalCompositeOperation = "source-over";
 
     const hr = getRect && getRect();                   // sparkles orbiting the heart
     if (hr && hr.width) {
