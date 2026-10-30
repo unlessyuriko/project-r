@@ -2,7 +2,7 @@
 import * as THREE from "./vendor/three.module.min.js";
 
 const TAU = Math.PI * 2;
-const INK = 0x0a0406;
+const INK = 0x3a0a24;
 const P = (t) => [16 * Math.sin(t) ** 3, 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)];
 
 // ---- inflated heart: a grid over the heart, pushed out to a rounded cross-section by distance from the edge ----

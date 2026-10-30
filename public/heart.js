@@ -1,8 +1,8 @@
 // Anime-style 2D heart: a mosaic of cel-shaded cushions with inked outlines, a glossy streak
 // and a white "sticker" rim. One piece per photo; opened pieces turn pale pink with a doodle heart.
-export const INK = "#0a0406";
+export const INK = "#3a0a24";
 const BASE_W = 1024, BASE_H = 920, BASE_SC = 28;
-const REDS = [[226, 20, 62], [232, 28, 70], [218, 14, 56], [236, 36, 78], [210, 10, 50]];   // near-identical: pieces differ only slightly
+const REDS = [[255, 66, 112], [255, 74, 120], [250, 58, 106], [255, 80, 124], [246, 54, 102]];   // near-identical: pieces differ only slightly
 
 const mulberry = (seed) => () => {
   seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -114,7 +114,7 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush, flat = false }
   function paintPixel(i, x, y) {
     const p = i * 4, o = owner[i];
     if (o < 0) {
-      if (flat) { px[p] = 110; px[p + 1] = 8; px[p + 2] = 32; px[p + 3] = 255; }   // opaque, so texture filtering never bleeds in black
+      if (flat) { px[p] = 150; px[p + 1] = 18; px[p + 2] = 52; px[p + 3] = 255; }   // opaque, so texture filtering never bleeds in black
       else px[p + 3] = 0;
       return;
     }
@@ -122,7 +122,7 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush, flat = false }
     // facets of one heart instead of separate fragments
     const lit = ((x - W / 2) * 0.55 + (y - H / 2) * 0.83) / (W * 0.36);   // >0 = lower-right of the heart
     const open = isOpen(cellPhoto[o]);
-    let [r, g, b] = open ? [40, 12, 18] : base[o];
+    let [r, g, b] = open ? [255, 228, 238] : base[o];
     if (!flat && lit > 0.3) {                          // one flat cel-shadow band + screentone dots
       r *= 0.8; g *= open ? 0.82 : 0.58; b *= open ? 0.86 : 0.66;
       const gx = (x % dotP) - dotP / 2, gy = (y % dotP) - dotP / 2;
@@ -131,7 +131,7 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush, flat = false }
     if (o === hover) { r += 38; g += 44; b += 44; }
     if (edge[i]) {                                     // thin seam in a deeper tone of the heart, not black ink
       if (o === hover) { r = 255; g = 245; b = 250; }
-      else if (open) { r = 130; g = 24; b = 44; }
+      else if (open) { r = 235; g = 170; b = 195; }
       else { r *= 0.62; g *= 0.5; b *= 0.55; }
     }
     px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = 255;
@@ -168,7 +168,7 @@ export function createHeart(canvas, n, { mobile, isOpen, onFlush, flat = false }
     for (let p = 0; p < n; p++) {                      // doodle heart on opened pieces
       if (!isOpen(p)) continue;
       const s = seeds[photoCell[p]], sz = Math.min(radius[photoCell[p]] * 0.26, 34 * Q);
-      ctx.fillStyle = "#ff2d55"; ctx.strokeStyle = "#fff1f3"; ctx.lineWidth = 3 * Q; ctx.lineJoin = "round";
+      ctx.fillStyle = "#ff5c8a"; ctx.strokeStyle = INK; ctx.lineWidth = 3.5 * Q; ctx.lineJoin = "round";
       miniHeart(ctx, s.x, s.y, sz); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "#fff"; star4(ctx, s.x + sz * 1.5, s.y - sz * 1.3, sz * 0.5); ctx.fill();
     }

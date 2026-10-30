@@ -72,7 +72,7 @@ function scratch(cfg, burst) {
     cv.width = W * dpr; cv.height = H * dpr;
     g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const gr = g.createLinearGradient(0, 0, W, H);
-    gr.addColorStop(0, "#5a0f1e"); gr.addColorStop(0.5, "#c01a3c"); gr.addColorStop(1, "#3a0a14");
+    gr.addColorStop(0, "#ff9ec0"); gr.addColorStop(0.5, "#ffd1e4"); gr.addColorStop(1, "#ff8fb4");
     g.fillStyle = gr; g.fillRect(0, 0, W, H);
     g.fillStyle = "rgba(255,255,255,.55)";
     for (let y = 14, row = 0; y < H; y += 30, row++) for (let x = 14 + (row % 2) * 15; x < W; x += 30) { star4(g, x, y, 5); g.fill(); }
@@ -134,7 +134,7 @@ function wheel(cfg, burst) {
   cv.width = size * dpr; cv.height = size * dpr;
   const g = cv.getContext("2d"); g.scale(dpr, dpr);
   const seg = TAU / n, cx = size / 2, R = size / 2 - 6;
-  const cols = ["#e0133f", "#150709", "#ff3358", "#2b0d14"];
+  const cols = ["#ffd1e4", "#fff3c9", "#ffb3cf", "#ffe6a8"];
   for (let i = 0; i < n; i++) {
     const a0 = -Math.PI / 2 + i * seg;
     g.beginPath(); g.moveTo(cx, cx); g.arc(cx, cx, R, a0, a0 + seg); g.closePath();
@@ -142,7 +142,7 @@ function wheel(cfg, burst) {
     if (i === n - 1 && i > 0 && col === cols[0]) col = cols[2];   // never the same colour next to the first slice
     g.fillStyle = col; g.fill(); g.lineWidth = 3.5; g.strokeStyle = INK; g.lineJoin = "round"; g.stroke();
     g.save(); g.translate(cx, cx); g.rotate(a0 + seg / 2);
-    g.fillStyle = "#fff"; g.font = "900 13px 'Zen Maru Gothic', system-ui, sans-serif"; g.textAlign = "right"; g.textBaseline = "middle";
+    g.fillStyle = INK; g.font = "900 13px 'Zen Maru Gothic', system-ui, sans-serif"; g.textAlign = "right"; g.textBaseline = "middle";
     let label = gifts[i]; if (label.length > 18) label = label.slice(0, 17) + "…";
     g.fillText(label, R - 14, 0); g.restore();
   }
@@ -227,7 +227,7 @@ function moon(cfg) {
   const halo = g.createRadialGradient(c, c, r * 0.8, c, c, r * 1.35);
   halo.addColorStop(0, "rgba(255,243,201,.55)"); halo.addColorStop(1, "rgba(255,243,201,0)");
   g.fillStyle = halo; g.fillRect(0, 0, S, S);
-  g.fillStyle = "#24090f"; g.beginPath(); g.arc(c, c, r, 0, TAU); g.fill();            // the dark side
+  g.fillStyle = "#4a3a86"; g.beginPath(); g.arc(c, c, r, 0, TAU); g.fill();            // the dark side
   g.beginPath(); g.moveTo(c, c - r); g.arc(c, c, r, -Math.PI / 2, Math.PI / 2, side < 0);
   g.ellipse(c, c, Math.max(0.01, Math.abs(k)) * r, r, 0, Math.PI / 2, -Math.PI / 2, (side > 0) === (k > 0));
   g.closePath(); g.fillStyle = "#fff3c9"; g.fill();                                      // the lit side
