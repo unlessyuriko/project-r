@@ -14,7 +14,6 @@ window.LOVE_CONFIG = {
   signature: "— Yours",
 
   // ---- sections under the heart (delete a block to hide that section) ----
-  names: { you: "Me", them: "You" },                     // used by the love test
   togetherNote: "Since the day we started",             // small line under the live counter
 
   scratch: {
@@ -43,7 +42,7 @@ window.LOVE_CONFIG = {
     gifts: ["Breakfast in bed", "Movie night, you pick", "Massage coupon", "Picnic date", "I cook dinner", "Weekend away", "A new book"],
   },
 
-  loveTest: { title: "Love test", sub: "Enter your name to see how compatible you are", themName: "" },
+  loveTest: { title: "Love test", sub: "How compatible are we?", names: ["Ye Pyae", "May Thu"], result: "A perfect match. 100%, no doubt." },
 
   songs: {
     title: "Songs that remind me of you",

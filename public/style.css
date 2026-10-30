@@ -231,7 +231,7 @@ code { background: var(--pale); padding: 0 4px; border-radius: 4px; }
 .result { margin-top: 4px; font-size: 18px; font-weight: 900; padding: 8px 18px; background: #fff; color: var(--ink); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 3px 4px 0 var(--ink); animation: pop-in .5s cubic-bezier(.3,1.6,.5,1); }
 
 .lt-row { display: flex; align-items: center; gap: 8px; width: 100%; }
-.lt-in { flex: 1; min-width: 0; font: 700 15px var(--font); text-align: center; padding: 9px 6px; color: var(--ink); background: var(--pale); border: 3px solid var(--ink); border-radius: 14px; outline: none; }
+.lt-in { flex: 1; min-width: 0; font: 900 16px var(--font); text-align: center; padding: 10px 6px; color: var(--ink); background: var(--pale); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 2px 3px 0 var(--ink); }
 .lt-heart .doodle { width: 26px; height: 26px; }
 .pct { font-size: 40px; font-weight: 900; color: var(--pink); -webkit-text-stroke: 5px var(--ink); paint-order: stroke fill; text-shadow: 2px 3px 0 var(--ink); }
 .sec .bar { width: 100%; }

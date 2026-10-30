@@ -177,8 +177,9 @@ function loveTest(cfg) {
   const t = cfg.loveTest;
   const s = section("Love test", t.title, t.sub);
   const row = el("div", "lt-row");
-  const you = el("input", "lt-in"); you.value = cfg.names?.you || ""; you.setAttribute("aria-label", "Your name"); you.maxLength = 24;
-  const them = el("input", "lt-in"); them.value = t.themName || ""; them.placeholder = cfg.names?.them || "Name"; them.setAttribute("aria-label", "Their name"); them.maxLength = 24;
+  const [nameA, nameB] = t.names || ["", ""];            // fixed names, not editable
+  const you = el("div", "lt-in", esc(nameA));
+  const them = el("div", "lt-in", esc(nameB));
   row.append(you, el("span", "lt-heart", doodle("d-heart")), them);
   const btn = el("button", "btn", "Calculate"); btn.type = "button";
   const meter = el("div", "bar"); const fill = el("span"); meter.appendChild(fill);
@@ -189,7 +190,7 @@ function loveTest(cfg) {
     fill.style.transition = "none"; fill.style.width = "0%"; void fill.offsetWidth;
     fill.style.transition = "width 2.2s cubic-bezier(.3,1,.5,1)"; fill.style.width = "100%";
     const t0 = performance.now();
-    const step = (now) => { const p = Math.min(1, (now - t0) / 2200); pct.textContent = Math.round(100 * (1 - Math.pow(1 - p, 3))) + "%"; if (p < 1) requestAnimationFrame(step); else quip.textContent = "Off the charts. Obviously."; };
+    const step = (now) => { const p = Math.min(1, (now - t0) / 2200); pct.textContent = Math.round(100 * (1 - Math.pow(1 - p, 3))) + "%"; if (p < 1) requestAnimationFrame(step); else quip.textContent = t.result || "A perfect match."; };
     quip.textContent = "Calculating..."; requestAnimationFrame(step);
   };
   s.append(row, btn, meter, pct, quip);
