@@ -56,6 +56,36 @@ export function initPages() {
   }), { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
   pages.forEach((p) => io.observe(p));
 
+  // scroll-linked motion: each page's card tilts, scales and fades with how far it is from the screen centre
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let queued = false;
+    const cache = new WeakMap();
+    const set = (el, k, v) => { let m = cache.get(el); if (!m) cache.set(el, (m = {})); if (m[k] !== v) { m[k] = v; el.style.setProperty(k, v); } };
+    const apply = () => {
+      queued = false;
+      const vh = innerHeight;
+      pages.forEach((pg, i) => {
+        const top = pg.getBoundingClientRect().top, p = Math.max(-1, Math.min(1, top / vh)), a = Math.abs(p);
+        const key = pg;
+        if (i === 0) {                                  // heart page: title and progress drift up and fade as it leaves
+          set(key, "--py", (p < 0 ? p * vh * 0.1 : 0).toFixed(1) + "px");
+          set(key, "--op", (p < 0 ? Math.max(0, 1 + p * 1.15) : 1).toFixed(3));
+          return;
+        }
+        const enter = p > 0;
+        set(key, "--ty", (p * vh * (enter ? 0.1 : 0.06)).toFixed(1) + "px");
+        set(key, "--rx", (enter ? p * 16 : -p * 12).toFixed(2) + "deg");
+        set(key, "--sc", (1 - a * (enter ? 0.1 : 0.08)).toFixed(3));
+        set(key, "--op", Math.max(0, 1 - a * (enter ? 0.95 : 1.15)).toFixed(3));
+        set(key, "--py", (p * vh * 0.1).toFixed(1) + "px");
+      });
+    };
+    const kick = () => { if (!queued) { queued = true; requestAnimationFrame(apply); } };
+    addEventListener("scroll", kick, { passive: true });
+    addEventListener("resize", kick);
+    apply();
+  }
+
   // Touch screens: the browser's own scroll snapping (CSS, runs on the compositor) feels native and never fights the finger.
   // The scripted glide below is only for mouse wheels and trackpads.
   const touch = matchMedia("(pointer: coarse)").matches;

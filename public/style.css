@@ -274,24 +274,6 @@ main { padding: 0 16px; gap: 0; }
 .extras .page { padding-left: 0; padding-right: 0; }
 .extras .sec { width: 100%; }
 
-.page:not(.hero) .sec { opacity: 0; transform: translateY(80px) scale(.86); filter: blur(18px); }
-.page:not(.hero) .sec > * { opacity: 0; transform: translateY(26px); filter: blur(8px); }
-.page:not(.hero) .sec .sec-title { letter-spacing: .35em; }
-.page.pg-in:not(.hero) .sec { opacity: 1; transform: none; filter: none; transition: opacity 1s ease, transform 1.3s cubic-bezier(.16,1,.3,1), filter 1s ease; }
-.page.pg-in:not(.hero) .sec > * { opacity: 1; transform: none; filter: none; transition: opacity .9s ease, transform 1.1s cubic-bezier(.16,1,.3,1), filter .9s ease, letter-spacing 1.6s cubic-bezier(.16,1,.3,1); }
-.page.pg-in .sec .sec-title { letter-spacing: 0; }
-.page.pg-in .sec > :nth-child(1) { transition-delay: .25s; }
-.page.pg-in .sec > :nth-child(2) { transition-delay: .4s; }
-.page.pg-in .sec > :nth-child(3) { transition-delay: .55s; }
-.page.pg-in .sec > :nth-child(4) { transition-delay: .7s; }
-.page.pg-in .sec > :nth-child(n+5) { transition-delay: .85s; }
-/* heart page: the title and panel settle in, like a title card */
-.hero > * { opacity: 0; transform: translateY(30px) scale(.96); filter: blur(10px); }
-.hero.pg-in > * { opacity: 1; transform: none; filter: none; transition: opacity 1s ease, transform 1.2s cubic-bezier(.16,1,.3,1), filter 1s ease; }
-.hero.pg-in > :nth-child(2) { transition-delay: .15s; }
-.hero.pg-in > :nth-child(3) { transition-delay: .3s; }
-.hero.pg-in > :nth-child(4) { transition-delay: .45s; }
-.hero.pg-in > :nth-child(5) { transition-delay: .9s; }
 
 .swipe-cue { display: grid; justify-items: center; gap: 0; color: #fff; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; pointer-events: none; animation: cue 1.8s ease-in-out infinite; }
 .swipe-cue svg { width: 22px; height: 22px; }
@@ -305,19 +287,42 @@ body:not(.on-hero) .swipe-cue { visibility: hidden; }
 
 .cine-vignette { position: fixed; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(10, 4, 30, .45) 100%); }
 
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .page .sec, .page .sec > *, .hero > * { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; letter-spacing: normal !important; }
-  .swipe-cue { animation: none; }
 }
 
 /* ---- touch devices: native snapping, no blur filters (they make swiping janky) ---- */
 html.touch-snap { scroll-snap-type: y mandatory; overscroll-behavior-y: none; }
 html.touch-snap .page { scroll-snap-align: start; scroll-snap-stop: always; }
-html.touch-snap .page:not(.hero) .sec, html.touch-snap .page:not(.hero) .sec > *, html.touch-snap .hero > * { filter: none !important; }
-html.touch-snap .page:not(.hero) .sec { transform: translateY(50px) scale(.94); }
-html.touch-snap .page.pg-in:not(.hero) .sec { transform: none; }
-html.touch-snap .page:not(.hero) .sec { will-change: transform, opacity; }
 html.touch-snap .cine-vignette { display: none; }
 /* body must not become its own scroll container, or the page snap points would attach to it instead of the screen */
 html, body { overflow-x: clip; overflow-y: visible; }
+
+/* ---- scroll-linked page transitions ---- */
+/* pages.js writes --ty --rx --sc --op --py on each page while you swipe, so the card and its contents move with your finger */
+.page { perspective: 1100px; }
+.sec { position: relative; transform-origin: 50% 55%; transform: translate3d(0, var(--ty, 0px), 0) rotateX(var(--rx, 0deg)) scale(var(--sc, 1)); opacity: var(--op, 1); will-change: transform, opacity; }
+.sec > * { transform: translate3d(0, calc(var(--py, 0px) * var(--k, 1)), 0); }
+.sec > :nth-child(1) { --k: 1.7; }
+.sec > :nth-child(2) { --k: 1.3; }
+.sec > :nth-child(3) { --k: 0.9; }
+.sec > :nth-child(4) { --k: 0.55; }
+.sec > :nth-child(n+5) { --k: 0.3; }
+.hero > header, .hero > .progress { transform: translate3d(0, var(--py, 0px), 0); opacity: var(--op, 1); }
+
+/* a light sweeps across the card, a ring of colour pulses out and the title wipes in once the page has landed */
+.sec::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .7) 50%, transparent 62%) no-repeat; background-size: 260% 100%; background-position: 160% 0;
+}
+.page.pg-in .sec::after { animation: shine 1.2s .1s ease-out; }
+.page.pg-in .sec { animation: ring 1.3s ease-out; }
+.page.pg-in .sec .tag { animation: tag-pop .7s .1s cubic-bezier(.3, 1.6, .5, 1) both; }
+.page.pg-in .sec .sec-title { animation: title-wipe .9s .15s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes shine { 0% { background-position: 160% 0; opacity: 1; } 100% { background-position: -60% 0; opacity: 1; } }
+@keyframes ring { from { box-shadow: 0 0 0 0 rgba(255, 61, 110, .55), 0 6px 18px rgba(20, 8, 50, .28); } to { box-shadow: 0 0 0 28px rgba(255, 61, 110, 0), 0 6px 18px rgba(20, 8, 50, .28); } }
+@keyframes tag-pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes title-wipe { from { clip-path: inset(-14px 100% -14px -14px); opacity: .3; } to { clip-path: inset(-14px -14px -14px -14px); opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sec, .sec > *, .hero > header, .hero > .progress { transform: none !important; opacity: 1 !important; }
+  .page.pg-in .sec, .page.pg-in .sec::after, .page.pg-in .sec .tag, .page.pg-in .sec .sec-title, .swipe-cue { animation: none !important; }
+}
