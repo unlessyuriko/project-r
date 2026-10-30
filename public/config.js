@@ -14,7 +14,7 @@ window.LOVE_CONFIG = {
   signature: "— Yours",
 
   // ---- sections under the heart (delete a block to hide that section) ----
-  togetherNote: "Since the day we started",             // small line under the live counter
+  togetherNote: "Since National Girlfriend Day, 1 August 2026",             // small line under the live counter
 
   scratch: {
     tag: "Scratch to reveal",
@@ -55,10 +55,10 @@ window.LOVE_CONFIG = {
     ],
   },
 
-  moon: { title: "The moon the day we started", sub: "" },     // computed from startDate
+  moon: { title: "The moon on National Girlfriend Day", sub: "" },     // computed from startDate
 
   note: {
     title: "Happy 3 months",
-    text: "I love you more than I did yesterday.",
+    text: "It started on National Girlfriend Day. I would pick it again, every time.",
   },
 };

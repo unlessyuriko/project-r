@@ -19,7 +19,7 @@ function cloudSprite() {
     [[70, 80, 44], [120, 62, 56], [180, 70, 50], [228, 84, 38], [150, 90, 50]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y + dy, r, 0, TAU); g.fill(); });
     g.fillRect(60, 86 + dy, 190, 34);
   };
-  blob("#b79ae0", 6); blob("#ffe3f0", -2);
+  blob("#6a1a2c", 6); blob("#d98a98", -2);
   return c;
 }
 
@@ -112,12 +112,12 @@ export function createBackdrop(canvas, { mobile, getRect }) {
 
     // sky
     const sky = g.createLinearGradient(0, 0, 0, h);
-    [[0, "#150c3f"], [0.42, "#2f1868"], [0.68, "#6f2a86"], [0.86, "#c94d80"], [1, "#ff9a7b"]].forEach(([o, c]) => sky.addColorStop(o, c));
+    [[0, "#070203"], [0.42, "#1a060c"], [0.68, "#4a0b1d"], [0.86, "#a3142f"], [1, "#ff5a3c"]].forEach(([o, c]) => sky.addColorStop(o, c));
     g.fillStyle = sky; g.fillRect(0, 0, w, h);
     const wide = w / h > 1.1;
     const gx = w * (wide ? 0.24 : 0.3), gy = h * 0.7;
     const glow = g.createRadialGradient(gx, gy, 0, gx, gy, h * 0.6);
-    glow.addColorStop(0, "rgba(255,176,130,.6)"); glow.addColorStop(1, "rgba(255,176,130,0)");
+    glow.addColorStop(0, "rgba(255,72,64,.55)"); glow.addColorStop(1, "rgba(255,72,64,0)");
     g.fillStyle = glow; g.fillRect(0, 0, w, h);
     // moon
     const mr = Math.max(24, Math.min(w, h) * 0.07), mx = w * 0.84, my = h * 0.15;
@@ -133,33 +133,33 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       const lc = canvasOf(w * dpr, h * dpr), lg = lc.getContext("2d");
       lg.scale(dpr, dpr); draw(lg);
       lg.setTransform(1, 0, 0, 1, 0, 0);
-      lg.globalCompositeOperation = "source-atop"; lg.fillStyle = `rgba(122,42,134,${hazeA})`; lg.fillRect(0, 0, lc.width, lc.height);
+      lg.globalCompositeOperation = "source-atop"; lg.fillStyle = `rgba(70,6,22,${hazeA})`; lg.fillRect(0, 0, lc.width, lc.height);
       g.drawImage(lc, 0, 0, w, h);
     };
-    const gold = { fill: "#d6aa5c", shade: "#a37a3c", line: "#2a1250" };
+    const gold = { fill: "#d6aa5c", shade: "#a37a3c", line: "#0a0406" };
     const farBase = h * 0.72, midBase = h * 0.8, nearBase = h * 0.88;
     const sx = w * (wide ? 0.17 : 0.3), ss = Math.min((h * 0.5) / 100, sx / 30);   // beside the heart so the whole pagoda reads
     const sg = g.createRadialGradient(sx, farBase - 50 * ss, 0, sx, farBase - 50 * ss, 80 * ss);   // golden glow around the pagoda
     sg.addColorStop(0, "rgba(255,205,110,.45)"); sg.addColorStop(1, "rgba(255,205,110,0)");
     g.fillStyle = sg; g.fillRect(0, 0, w, h);
     layer((l) => {                                     // far: Shwedagon
-      const shw = { fill: "#f2c25a", hi: "#ffe28a", shade: "#c28a2c", line: "#2a1250", bands: SHW_BANDS };
+      const shw = { fill: "#f2c25a", hi: "#ffe28a", shade: "#c28a2c", line: "#0a0406", bands: SHW_BANDS };
       for (const [dx, hs] of [[-31, 0.34], [-24, 0.26], [24, 0.26], [31, 0.34]]) stupa(l, sx + dx * ss, farBase - 9 * ss, ss * hs * 2.4, MINI, { ...gold, hi: "#ffe28a", fill: "#f2c25a", shade: "#c28a2c" });
       stupa(l, sx, farBase, ss, SHW, shw);
-      l.fillStyle = "#3d2070"; l.fillRect(0, farBase - 2, w, h);
+      l.fillStyle = "#220810"; l.fillRect(0, farBase - 2, w, h);
     }, 0.08);
     layer((l) => {                                     // mid: Sule + colonial rows
-      const pal = { wall: "#4a2a82", shade: "#3a2070", roof: "#321a60", window: "#24123f", line: "#220f45", gold: "#d6aa5c" };
+      const pal = { wall: "#2c0b14", shade: "#1e070d", roof: "#16050a", window: "#0e0306", line: "#0a0306", gold: "#d6aa5c" };
       const s = (h * 0.27) / 41;
-      stupa(l, w * (wide ? 0.8 : 0.82), midBase, s, SULE, { fill: "#cf9f55", shade: "#9a7238", line: "#220f45" });
+      stupa(l, w * (wide ? 0.8 : 0.82), midBase, s, SULE, { fill: "#cf9f55", shade: "#9a7238", line: "#0a0306" });
       const bh = h * 0.12;
       [[0.46, 0.45, false], [0.57, 0.5, true], [0.68, 0.4, false], [0.9, 0.5, true], [0.97, 0.36, false]].forEach(([fx, ws, tw]) => colonial(l, w * fx, midBase, bh * 1.9 * ws * 1.4, bh * (0.8 + ws * 0.4), tw, pal, R));
-      l.fillStyle = "#2c1658"; l.fillRect(0, midBase - 2, w, h);
+      l.fillStyle = "#18060b"; l.fillRect(0, midBase - 2, w, h);
     }, 0.2);
     layer((l) => {                                     // near: palms + ground
-      [[0.03, 0.26], [0.1, 0.19], [0.93, 0.24], [0.99, 0.17], [0.5, 0.12], [0.63, 0.14]].forEach(([fx, hf]) => palm(l, w * fx, nearBase + 4, h * hf, "#1d0e3a"));
-      l.fillStyle = "#1d0e3a"; l.fillRect(0, nearBase, w, h);
-      l.fillStyle = "#2a1650"; l.fillRect(0, nearBase, w, 3);
+      [[0.03, 0.26], [0.1, 0.19], [0.93, 0.24], [0.99, 0.17], [0.5, 0.12], [0.63, 0.14]].forEach(([fx, hf]) => palm(l, w * fx, nearBase + 4, h * hf, "#0b0305"));
+      l.fillStyle = "#0b0305"; l.fillRect(0, nearBase, w, h);
+      l.fillStyle = "#2a0a12"; l.fillRect(0, nearBase, w, 3);
     }, 0.05);
     trainY = nearBase; trainH = Math.max(26, h * 0.06);
   }
@@ -178,16 +178,16 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   function train(g) {
     const ch = trainH, cw = ch * 2.7, y = trainY - ch - 2;
     const total = cw * 5.8, x0 = ((t * 28) % (w + total * 2)) - total * 1.4;
-    g.save(); g.lineJoin = "round"; g.lineWidth = 2.5; g.strokeStyle = "#140a2c";
+    g.save(); g.lineJoin = "round"; g.lineWidth = 2.5; g.strokeStyle = "#050203";
     for (let i = 0; i < 5; i++) {
       const x = x0 + i * (cw + 3);
-      g.fillStyle = "#4e2d86"; g.fillRect(x, y, cw, ch); g.strokeRect(x, y, cw, ch);
-      g.fillStyle = "#35205f"; g.fillRect(x, y + ch * 0.72, cw, ch * 0.28);
+      g.fillStyle = "#3a0e18"; g.fillRect(x, y, cw, ch); g.strokeRect(x, y, cw, ch);
+      g.fillStyle = "#240a10"; g.fillRect(x, y + ch * 0.72, cw, ch * 0.28);
       g.fillStyle = "#e0a85a"; g.fillRect(x, y + ch * 0.64, cw, ch * 0.08);
       for (let k = 0; k < 5; k++) { g.fillStyle = "#ffd890"; g.fillRect(x + cw * (0.07 + k * 0.18), y + ch * 0.18, cw * 0.12, ch * 0.34); }
     }
     const lx = x0 - cw * 0.85;                         // locomotive + headlight
-    g.fillStyle = "#6a3a52"; g.fillRect(lx, y, cw * 0.8, ch); g.strokeRect(lx, y, cw * 0.8, ch);
+    g.fillStyle = "#5e1424"; g.fillRect(lx, y, cw * 0.8, ch); g.strokeRect(lx, y, cw * 0.8, ch);
     g.fillStyle = "#ffe9a8"; g.fillRect(lx + cw * 0.12, y + ch * 0.2, cw * 0.18, ch * 0.3);
     const hl = g.createRadialGradient(lx, y + ch * 0.5, 0, lx, y + ch * 0.5, ch * 2.2);
     hl.addColorStop(0, "rgba(255,230,160,.5)"); hl.addColorStop(1, "rgba(255,230,160,0)");
