@@ -146,24 +146,87 @@ function gate() {
   });
 }
 
-function bindHeart() {
-  const cv = $("#heart");
-  cv.addEventListener("pointermove", (e) => {
-    if (e.pointerType !== "mouse") return;
-    const c = heart.cellAt(e.clientX, e.clientY);
-    heart.setHover(c);
-    cv.style.cursor = c >= 0 ? "pointer" : "default";
-  });
-  cv.addEventListener("pointerleave", () => heart.setHover(-1));
-  cv.addEventListener("click", (e) => {
-    const c = heart.cellAt(e.clientX, e.clientY);
-    if (c < 0) return;
-    burst(e.clientX, e.clientY);
-    const st = $("#stage");
-    st.classList.remove("kick"); void st.offsetWidth; st.classList.add("kick");
-    show(heart.cellPhoto[c]);
-  });
+// ---------- horizontal spin ----------
+let ang = 0, vel = 0, dragging = false, idleSince = 0;
+const PERSPECTIVE = 1100;
+function applySpin() {
+  const sp = $("#spin");
+  sp.style.transform = `perspective(${PERSPECTIVE}px) rotateY(${ang.toFixed(2)}deg)`;
+  sp.style.filter = `brightness(${(1 - 0.32 * Math.abs(Math.sin((ang * Math.PI) / 180))).toFixed(3)})`;   // edge-on = darker
 }
+function spinLoop() {
+  requestAnimationFrame(spinLoop);
+  if (dragging || $("#modal").hidden === false) return;
+  if (Math.abs(vel) > 0.02) { ang += vel; vel *= 0.94; idleSince = performance.now(); }
+  else {
+    vel = 0;
+    if (performance.now() - idleSince > 2200) {      // settle back to facing front
+      const target = Math.round(ang / 360) * 360;
+      ang += (target - ang) * 0.08;
+      if (Math.abs(target - ang) < 0.05) ang = target;
+    }
+  }
+  applySpin();
+}
+// screen point -> position on the heart, through the CSS 3D transform (a homography on the heart's plane)
+function pick(clientX, clientY) {
+  const st = $("#stage"), r = st.getBoundingClientRect();
+  const m = new DOMMatrix(getComputedStyle($("#spin")).transform);
+  const H = [[m.m11, m.m21, m.m41], [m.m12, m.m22, m.m42], [m.m14, m.m24, m.m44]];
+  const [a, b, c, d, e, f, g, h, i] = [H[0][0], H[0][1], H[0][2], H[1][0], H[1][1], H[1][2], H[2][0], H[2][1], H[2][2]];
+  const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+  if (Math.abs(det) < 1e-9) return -1;
+  const X = clientX - (r.left + r.width / 2), Y = clientY - (r.top + r.height / 2);
+  const inv = [
+    [(e * i - f * h), (c * h - b * i), (b * f - c * e)],
+    [(f * g - d * i), (a * i - c * g), (c * d - a * f)],
+    [(d * h - e * g), (b * g - a * h), (a * e - b * d)],
+  ];
+  const px = inv[0][0] * X + inv[0][1] * Y + inv[0][2], py = inv[1][0] * X + inv[1][1] * Y + inv[1][2], pw = inv[2][0] * X + inv[2][1] * Y + inv[2][2];
+  if (!pw) return -1;
+  const lx = px / pw, ly = py / pw;                  // px offset from the heart's centre
+  return heart.cellAtUV(0.5 + lx / r.width, 0.5 + ly / r.height);
+}
+function bindHeart() {
+  const cv = $("#heart"), st = $("#stage");
+  let down = null, moved = false;
+  cv.addEventListener("pointerdown", (e) => {
+    down = { x: e.clientX, last: e.clientX }; moved = false; dragging = true; vel = 0;
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (!down) {
+      if (e.pointerType !== "mouse") return;
+      const c = pick(e.clientX, e.clientY);
+      heart.setHover(c);
+      cv.style.cursor = c >= 0 ? "pointer" : "grab";
+      return;
+    }
+    if (Math.abs(e.clientX - down.x) > 6) moved = true;
+    if (moved) {
+      const d = (e.clientX - down.last) * 0.6;
+      ang += d; vel = d; applySpin();
+      heart.setHover(-1); cv.style.cursor = "grabbing";
+    }
+    down.last = e.clientX;
+  });
+  const end = (e, cancelled) => {
+    if (!down) return;
+    const wasTap = !moved && !cancelled;
+    down = null; dragging = false; idleSince = performance.now();
+    if (wasTap) {
+      const c = pick(e.clientX, e.clientY);
+      if (c >= 0) {
+        burst(e.clientX, e.clientY);
+        st.classList.remove("kick"); void st.offsetWidth; st.classList.add("kick");
+        show(heart.cellPhoto[c]);
+      }
+    }
+  };
+  cv.addEventListener("pointerup", (e) => end(e, false));
+  cv.addEventListener("pointercancel", (e) => end(e, true));
+  cv.addEventListener("pointerleave", () => { if (!down) heart.setHover(-1); });
+  spinLoop();}
 
 async function init() {
   const title = cfg.title || "Our Heart";            // sticker title: letters pop in one by one
@@ -192,7 +255,7 @@ async function init() {
   const saved = safe(() => JSON.parse(localStorage.getItem(STORE + photos.length) || "[]")) || [];
   opened = new Set(saved.filter((p) => p < photos.length));
   heart = createHeart($("#heart"), photos.length, { mobile: MOBILE, isOpen: (p) => opened.has(p) });
-  backdrop = createBackdrop($("#bgc"), { mobile: MOBILE, getRect: () => $("#heart").getBoundingClientRect() });
+  backdrop = createBackdrop($("#bgc"), { mobile: MOBILE, getRect: () => $("#stage").getBoundingClientRect() });
   addEventListener("resize", () => backdrop.resize());
   bindHeart();
   updateProgress();

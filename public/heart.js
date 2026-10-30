@@ -178,9 +178,8 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
     ctx.restore();
   }
 
-  function cellAt(clientX, clientY) {
-    const r = canvas.getBoundingClientRect();
-    const x = Math.floor(((clientX - r.left) / r.width) * W), y = Math.floor(((clientY - r.top) / r.height) * H);
+  function cellAtUV(u, v) {                            // u, v in 0..1 across the (unrotated) heart canvas
+    const x = Math.floor(u * W), y = Math.floor(v * H);
     return x < 0 || y < 0 || x >= W || y >= H ? -1 : owner[y * W + x];
   }
   function setHover(c) {
@@ -194,5 +193,5 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
   function refresh(photoIdx) { paintCell(photoCell[photoIdx]); flush(); }
 
   paintAll(); flush();
-  return { cellPhoto, photoCell, cellAt, setHover, refresh, redraw() { paintAll(); flush(); } };
+  return { cellPhoto, photoCell, cellAtUV, setHover, refresh, redraw() { paintAll(); flush(); } };
 }

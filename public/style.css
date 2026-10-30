@@ -68,8 +68,9 @@ h1 {
   animation: spin 40s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+#spin { width: 100%; height: 100%; will-change: transform; touch-action: pan-y; }   /* horizontal drag spins the heart, vertical drag still scrolls */
 #heart {
-  width: 100%; height: 100%; display: block; cursor: default;
+  width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y;
   filter: drop-shadow(5px 8px 0 rgba(30, 6, 24, .55)) drop-shadow(0 0 26px rgba(255, 90, 140, .55));
   animation: beat 1.7s infinite;                    /* squash-and-stretch heartbeat */
   transform-origin: 50% 62%;
