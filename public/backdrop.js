@@ -273,6 +273,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   }
   // a big spoked driving wheel; returns the crank pin so the connecting rod can follow it
   function driver(g, x, y, r, ang) {
+    g.save();
     g.fillStyle = "#140a1c"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
     g.fillStyle = "#b01830"; g.beginPath(); g.arc(x, y, r * 0.8, 0, TAU); g.fill();
     g.strokeStyle = "#140a1c"; g.lineWidth = Math.max(1.5, r * 0.1); g.lineCap = "round";
@@ -280,6 +281,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     g.fillStyle = "#e8b04a"; g.beginPath(); g.arc(x, y, r * 0.22, 0, TAU); g.fill();
     const px = x + Math.cos(ang) * r * 0.52, py = y + Math.sin(ang) * r * 0.52;
     g.fillStyle = "#f0d58a"; g.beginPath(); g.arc(px, py, r * 0.13, 0, TAU); g.fill();
+    g.restore();
     return [px, py];
   }
   function train(g, dt) {
@@ -296,7 +298,9 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       g.fillStyle = "#2a0d18"; g.fillRect(x - 1, y, cw + 2, ch * 0.12);
       g.fillStyle = GOLD; g.fillRect(x, y + ch * 0.62, cw, ch * 0.05);
       for (let k = 0; k < 4; k++) { g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(x + cw * (0.1 + k * 0.22), y + ch * 0.22, cw * 0.14, ch * 0.3, 2); g.fill(); }
-      wheel(g, x + cw * 0.2, y + ch * 0.9, wr, "#a8142c"); wheel(g, x + cw * 0.8, y + ch * 0.9, wr, "#a8142c");
+      const cr = ch * 0.23, ca = (t * 42) / cr;                                   // the same spoked wheels as the engine, with a rod
+      const pins = [0.2, 0.5, 0.8].map((f) => driver(g, x + cw * f, gy - cr, cr, ca));
+      g.strokeStyle = "#e9dcb4"; g.lineWidth = Math.max(1.5, ch * 0.04); g.lineCap = "round"; g.beginPath(); g.moveTo(pins[0][0], pins[0][1]); g.lineTo(pins[2][0], pins[2][1]); g.stroke(); g.lineCap = "butt"; g.strokeStyle = OUT; g.lineWidth = 2;
     }
     // tender: scarlet sides, gold lining and a heap of coal
     g.fillStyle = DEEP; g.fillRect(tx, gy - ch * 0.84, tw, ch * 0.58); g.strokeRect(tx, gy - ch * 0.84, tw, ch * 0.58);
@@ -304,7 +308,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     g.fillStyle = "#1c1224"; g.beginPath(); g.moveTo(tx + 2, gy - ch * 0.84);
     for (let k = 0; k <= 8; k++) g.lineTo(tx + 2 + ((tw - 4) * k) / 8, gy - ch * (0.84 + (k % 2 ? 0.2 : 0.13) + Math.sin(k * 1.7) * 0.03));
     g.lineTo(tx + tw - 2, gy - ch * 0.84); g.closePath(); g.fill(); g.stroke();
-    wheel(g, tx + tw * 0.25, gy - wr, wr * 1.1, RED); wheel(g, tx + tw * 0.75, gy - wr, wr * 1.1, RED);
+    { const tr = ch * 0.23, ta = (t * 42) / tr; driver(g, tx + tw * 0.25, gy - tr, tr, ta); driver(g, tx + tw * 0.75, gy - tr, tr, ta); }
     // locomotive: cab, scarlet boiler with black bands, black smokebox, chimney, domes, cylinders and rods
     const by = gy - ch * 0.72, br = ch * 0.29, bx = lx + lw * 0.27, bEnd = front - lw * 0.04;   // boiler centre line and extent
     g.fillStyle = "#1a0b16"; g.fillRect(lx - 2, gy - ch * 0.42, lw + 4, ch * 0.09);                // running board and frame
