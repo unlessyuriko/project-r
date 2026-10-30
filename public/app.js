@@ -2,6 +2,9 @@ import { createHeart } from "./heart.js";
 import { createBackdrop } from "./backdrop.js";
 import { createScene } from "./heart3d.js";
 import { initExtras } from "./extras.js";
+import { wrapHero, initPages } from "./pages.js";
+
+wrapHero();
 
 const cfg = window.LOVE_CONFIG || {};
 const $ = (s) => document.querySelector(s);
@@ -260,6 +263,7 @@ async function init() {
   bindHeart();
   updateProgress();
   initExtras(cfg, { burst });
+  initPages();
   $("#loader").hidden = true;
 }
 init();
