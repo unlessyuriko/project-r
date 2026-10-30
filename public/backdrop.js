@@ -205,6 +205,8 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       [[0.03, 0.26], [0.1, 0.19], [0.93, 0.24], [0.99, 0.17], [0.5, 0.12], [0.63, 0.14]].forEach(([fx, hf]) => palm(l, w * fx, nearBase + 4, h * hf, "#1d0e3a"));
       l.fillStyle = "#1d0e3a"; l.fillRect(0, nearBase, w, 9);                // the bank; the lake starts below it
       l.fillStyle = "#2a1650"; l.fillRect(0, nearBase, w, 3);
+      l.fillStyle = "#0f0620"; for (let x = 2; x < w; x += 9) l.fillRect(x, nearBase + 2, 4, 6);          // sleepers
+      l.fillStyle = "#b9a9d9"; l.fillRect(0, nearBase + 2, w, 1.6); l.fillStyle = "#6d5a9a"; l.fillRect(0, nearBase + 3.6, w, 1.4);   // the rail
     }, 0.05);
     // billboard: a tall tower with the couple's picture on top, lit by a row of lamps
     bill = null;
@@ -222,10 +224,10 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       g.save(); g.beginPath(); g.roundRect(bx - bw2 / 2, by + 6, bw2, bh2 - 6, 5); g.clip();
       const ir = billImg.naturalWidth / billImg.naturalHeight, tw = bw2, th = tw / ir;
       g.drawImage(billImg, bx - bw2 / 2, by + 6 + (bh2 - 6 - th) / 2, tw, th); g.restore();
-      const fs = Math.max(7, bw2 * 0.064);                                                              // caption plate under the picture
+      const fs = Math.max(6, bw2 * 0.052);                                                              // caption plate under the picture
       g.fillStyle = "#fff3d6"; g.textAlign = "center"; g.textBaseline = "middle";
-      g.font = `900 ${fs}px "Zen Maru Gothic", system-ui, sans-serif`;
-      g.fillText("Ye Pyae ♥ May Thu", bx, by + bh2 + (fh - bh2) * 0.3);
+      g.font = `900 ${fs}px "Zen Maru Gothic", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif`;
+      g.fillText("Ye Pyae ❤️ May Thu", bx, by + bh2 + (fh - bh2) * 0.3);
       g.fillStyle = "#ffb6c8"; g.font = `700 ${fs * 0.8}px "Zen Maru Gothic", system-ui, sans-serif`;
       g.fillText("since 1 Aug 2026", bx, by + bh2 + (fh - bh2) * 0.72);
       for (let i = 0; i < 7; i++) bulbs.push([fx + 6 + (fw - 12) * (i / 6), by - 2, i % 3, rb() * 6.28]);   // lamps along the top edge
@@ -265,8 +267,8 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     g.fillStyle = hub; g.beginPath(); g.arc(x, y, r * 0.45, 0, TAU); g.fill();
   }
   function train(g, dt) {
-    const ch = trainH, cw = ch * 2.7, y = trainY - ch - 2, nCar = 4, lw = cw * 1.25, gap = 3;
-    const total = (cw + gap) * nCar + lw, x0 = ((t * 28) % (w + total * 2)) - total * 1.4;
+    const ch = trainH, cw = ch * 2.7, y = trainY + 2 - ch * 1.08, nCar = 4, lw = cw * 1.25, gap = 3;
+    const total = (cw + gap) * nCar + lw, x0 = ((t * 42) % (w + total + ch * 6)) - total;   // leaves on the right, comes back in on the left
     const lx = x0 + (cw + gap) * nCar, front = lx + lw, wr = ch * 0.17;
     g.save(); g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = "#140a1c";
     for (let i = 0; i < nCar; i++) {                   // scarlet carriages with a gold stripe and lit windows
