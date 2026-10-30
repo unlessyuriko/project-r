@@ -168,7 +168,7 @@ export function createScene({ canvas, stageEl, heartCanvas, heart, mobile, reduc
     }
   }
 
-  let ppu = 16, camD = 66, ang = 0, lift = 0, kick = 0, paused = false, last = 0, t = 0;
+  let ppu = 16, camD = 66, ang = 0, lift = 0, kick = 0, paused = false, last = 0, t = 0, lastScroll = scrollY;
   function resize() {
     const vw = document.documentElement.clientWidth, vh = innerHeight, sr = stageEl.getBoundingClientRect();
     renderer.setSize(vw, vh, false);
@@ -205,13 +205,14 @@ export function createScene({ canvas, stageEl, heartCanvas, heart, mobile, reduc
     kick *= Math.pow(0.02, dt);
     pivot.scale.setScalar(1 + beat + kick);
 
-    snow.position.set(px, py, 0);
+    snow.position.set(0, 0, 0);                         // snow fills the viewport, so it stays with the page as it scrolls
     snow.rotation.y = (ang * Math.PI) / 180 * 0.55;     // the snow turns with the heart (a little slower), like one shared space
+    const sy = scrollY, ds = (sy - lastScroll) / ppu; lastScroll = sy;   // page scroll drags the flakes along (parallax)
     for (const L of layers) {
-      const a = L.arr;
+      const a = L.arr, par = L.size > 2 ? 0.7 : 0.45;   // big flakes are nearer, so they travel further
       for (let i = 0; i < L.n; i++) {
-        let y = a[i * 3 + 1] - L.vy[i] * dt * (reduced ? 0.3 : 1);
-        if (y < -spread.h) y += spread.h * 2;
+        let y = a[i * 3 + 1] - L.vy[i] * dt * (reduced ? 0.3 : 1) + ds * par;
+        if (y < -spread.h) y += spread.h * 2; else if (y > spread.h) y -= spread.h * 2;
         a[i * 3 + 1] = y;
         a[i * 3] += Math.sin(t * 0.7 + L.ph[i]) * dt * 1.2;
       }
