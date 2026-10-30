@@ -266,41 +266,84 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     g.fillStyle = "#140a1c"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
     g.fillStyle = hub; g.beginPath(); g.arc(x, y, r * 0.45, 0, TAU); g.fill();
   }
+  // a big spoked driving wheel; returns the crank pin so the connecting rod can follow it
+  function driver(g, x, y, r, ang) {
+    g.fillStyle = "#140a1c"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+    g.fillStyle = "#b01830"; g.beginPath(); g.arc(x, y, r * 0.8, 0, TAU); g.fill();
+    g.strokeStyle = "#140a1c"; g.lineWidth = Math.max(1.5, r * 0.1); g.lineCap = "round";
+    for (let k = 0; k < 8; k++) { const q = ang + (k * TAU) / 8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(q) * r * 0.78, y + Math.sin(q) * r * 0.78); g.stroke(); }
+    g.fillStyle = "#e8b04a"; g.beginPath(); g.arc(x, y, r * 0.22, 0, TAU); g.fill();
+    const px = x + Math.cos(ang) * r * 0.52, py = y + Math.sin(ang) * r * 0.52;
+    g.fillStyle = "#f0d58a"; g.beginPath(); g.arc(px, py, r * 0.13, 0, TAU); g.fill();
+    return [px, py];
+  }
   function train(g, dt) {
-    const ch = trainH, cw = ch * 2.7, y = trainY + 2 - ch * 1.08, nCar = 4, lw = cw * 1.25, gap = 3;
-    const total = (cw + gap) * nCar + lw, x0 = ((t * 42) % (w + total + ch * 6)) - total;   // leaves on the right, comes back in on the left
-    const lx = x0 + (cw + gap) * nCar, front = lx + lw, wr = ch * 0.17;
-    g.save(); g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = "#140a1c";
+    const ch = trainH, cw = ch * 2.7, gap = 3, nCar = 4, tw = cw * 0.8, lw = cw * 1.6;
+    const gy = trainY + 2, y = gy - ch * 1.08;                                // gy: where the wheels touch the rail
+    const total = (cw + gap) * nCar + tw + gap + lw, x0 = ((t * 42) % (w + total + ch * 6)) - total;   // leaves on the right, comes back in on the left
+    const tx = x0 + (cw + gap) * nCar, lx = tx + tw + gap, front = lx + lw, wr = ch * 0.17;
+    const dr = ch * 0.3, spin = (t * 42) / dr;                                 // driving wheel radius and rotation
+    const OUT = "#140a1c", RED = "#b01830", DEEP = "#7a1020", GOLD = "#e8b04a";
+    g.save(); g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = OUT;
     for (let i = 0; i < nCar; i++) {                   // scarlet carriages with a gold stripe and lit windows
       const x = x0 + i * (cw + gap);
       g.fillStyle = "#a8142c"; g.fillRect(x, y + ch * 0.08, cw, ch * 0.78); g.strokeRect(x, y + ch * 0.08, cw, ch * 0.78);
       g.fillStyle = "#2a0d18"; g.fillRect(x - 1, y, cw + 2, ch * 0.12);
-      g.fillStyle = "#e8b04a"; g.fillRect(x, y + ch * 0.62, cw, ch * 0.05);
+      g.fillStyle = GOLD; g.fillRect(x, y + ch * 0.62, cw, ch * 0.05);
       for (let k = 0; k < 4; k++) { g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(x + cw * (0.1 + k * 0.22), y + ch * 0.22, cw * 0.14, ch * 0.3, 2); g.fill(); }
       wheel(g, x + cw * 0.2, y + ch * 0.9, wr, "#a8142c"); wheel(g, x + cw * 0.8, y + ch * 0.9, wr, "#a8142c");
     }
-    // locomotive: cab at the back, boiler, tall chimney, brass dome, cowcatcher and the lamp at the front
-    g.fillStyle = "#7a1020"; g.fillRect(lx, y - ch * 0.04, lw * 0.3, ch * 0.9); g.strokeRect(lx, y - ch * 0.04, lw * 0.3, ch * 0.9);
-    g.fillStyle = "#1a0b16"; g.fillRect(lx - 2, y - ch * 0.12, lw * 0.3 + 4, ch * 0.1);
-    g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(lx + lw * 0.06, y + ch * 0.12, lw * 0.16, ch * 0.3, 2); g.fill();
-    g.fillStyle = "#b01830"; g.beginPath(); g.roundRect(lx + lw * 0.3, y + ch * 0.26, lw * 0.64, ch * 0.6, ch * 0.2); g.fill(); g.stroke();
-    g.fillStyle = "#e8b04a"; g.fillRect(lx + lw * 0.52, y + ch * 0.27, 3, ch * 0.58); g.fillRect(lx + lw * 0.74, y + ch * 0.27, 3, ch * 0.58);
-    g.fillStyle = "#14091a"; g.beginPath(); g.roundRect(lx + lw * 0.82, y + ch * 0.28, lw * 0.14, ch * 0.56, ch * 0.12); g.fill(); g.stroke();   // smokebox
-    const cx = lx + lw * 0.74, ctop = y + ch * 0.26;                          // chimney with a flared top
-    g.fillStyle = "#14091a"; g.fillRect(cx - ch * 0.07, ctop - ch * 0.26, ch * 0.14, ch * 0.28);
-    g.beginPath(); g.moveTo(cx - ch * 0.07, ctop - ch * 0.26); g.lineTo(cx - ch * 0.14, ctop - ch * 0.4); g.lineTo(cx + ch * 0.14, ctop - ch * 0.4); g.lineTo(cx + ch * 0.07, ctop - ch * 0.26); g.closePath(); g.fill();
-    g.fillStyle = "#e8b04a"; g.beginPath(); g.arc(lx + lw * 0.5, y + ch * 0.26, ch * 0.1, Math.PI, 0); g.fill();
-    g.fillStyle = "#14091a"; g.beginPath(); g.moveTo(front, y + ch * 0.86); g.lineTo(front + ch * 0.28, y + ch * 0.93); g.lineTo(front, y + ch * 0.93); g.closePath(); g.fill();
-    wheel(g, lx + lw * 0.2, y + ch * 0.86, wr * 1.5, "#a8142c"); wheel(g, lx + lw * 0.52, y + ch * 0.88, wr * 1.2, "#a8142c"); wheel(g, lx + lw * 0.84, y + ch * 0.88, wr * 1.2, "#a8142c");
-    const hx = front + 1, hy = y + ch * 0.5;                                   // the headlight, on the nose
-    g.fillStyle = "#fff6c8"; g.beginPath(); g.arc(hx, hy, ch * 0.09, 0, TAU); g.fill();
-    const beam = g.createLinearGradient(hx, 0, hx + ch * 5.5, 0); beam.addColorStop(0, "rgba(255,240,180,.55)"); beam.addColorStop(1, "rgba(255,240,180,0)");
-    g.fillStyle = beam; g.beginPath(); g.moveTo(hx, hy - ch * 0.05); g.lineTo(hx + ch * 5.5, hy - ch * 0.9); g.lineTo(hx + ch * 5.5, hy + ch * 0.9); g.lineTo(hx, hy + ch * 0.05); g.closePath(); g.fill();
-    const hl = g.createRadialGradient(hx, hy, 0, hx, hy, ch * 1.4); hl.addColorStop(0, "rgba(255,240,180,.75)"); hl.addColorStop(1, "rgba(255,240,180,0)");
-    g.fillStyle = hl; g.fillRect(hx - ch * 1.4, hy - ch * 1.4, ch * 2.8, ch * 2.8);
+    // tender: scarlet sides, gold lining and a heap of coal
+    g.fillStyle = DEEP; g.fillRect(tx, gy - ch * 0.84, tw, ch * 0.58); g.strokeRect(tx, gy - ch * 0.84, tw, ch * 0.58);
+    g.fillStyle = GOLD; g.fillRect(tx + 3, gy - ch * 0.78, tw - 6, 1.6); g.fillRect(tx + 3, gy - ch * 0.34, tw - 6, 1.6);
+    g.fillStyle = "#1c1224"; g.beginPath(); g.moveTo(tx + 2, gy - ch * 0.84);
+    for (let k = 0; k <= 8; k++) g.lineTo(tx + 2 + ((tw - 4) * k) / 8, gy - ch * (0.84 + (k % 2 ? 0.2 : 0.13) + Math.sin(k * 1.7) * 0.03));
+    g.lineTo(tx + tw - 2, gy - ch * 0.84); g.closePath(); g.fill(); g.stroke();
+    wheel(g, tx + tw * 0.25, gy - wr, wr * 1.1, RED); wheel(g, tx + tw * 0.75, gy - wr, wr * 1.1, RED);
+    // locomotive: cab, scarlet boiler with black bands, black smokebox, chimney, domes, cylinders and rods
+    const by = gy - ch * 0.72, br = ch * 0.29, bx = lx + lw * 0.27, bEnd = front - lw * 0.04;   // boiler centre line and extent
+    g.fillStyle = "#1a0b16"; g.fillRect(lx - 2, gy - ch * 0.42, lw + 4, ch * 0.09);                // running board and frame
+    g.fillStyle = DEEP; g.fillRect(lx, gy - ch * 1.18, lw * 0.25, ch * 0.78); g.strokeRect(lx, gy - ch * 1.18, lw * 0.25, ch * 0.78);   // cab
+    g.fillStyle = "#1a0b16"; g.fillRect(lx - 4, gy - ch * 1.26, lw * 0.25 + 9, ch * 0.1);          // cab roof overhang
+    g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(lx + lw * 0.04, gy - ch * 1.02, lw * 0.14, ch * 0.3, 3); g.fill(); g.stroke();   // cab window
+    g.fillStyle = GOLD; g.fillRect(lx + lw * 0.05, gy - ch * 0.62, lw * 0.12, ch * 0.07);          // number plate
+    g.fillStyle = RED; g.fillRect(bx, by - br * 1.1, lw * 0.12, br * 2.2); g.strokeRect(bx, by - br * 1.1, lw * 0.12, br * 2.2);   // firebox shoulder
+    g.fillStyle = RED; g.beginPath(); g.roundRect(bx + lw * 0.1, by - br, bEnd - bx - lw * 0.1 - lw * 0.2, br * 2, br * 0.3); g.fill(); g.stroke();   // boiler barrel
+    g.fillStyle = "#1a0b16"; for (const f of [0.3, 0.52, 0.72]) g.fillRect(bx + lw * f, by - br + 1, 4, br * 2 - 2);   // boiler bands
+    g.fillStyle = GOLD; for (const f of [0.3, 0.52, 0.72]) g.fillRect(bx + lw * f + 4, by - br + 1, 1.6, br * 2 - 2);
+    g.strokeStyle = "#f0d58a"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(bx + lw * 0.12, by - br * 0.55); g.lineTo(bEnd - lw * 0.2, by - br * 0.55); g.stroke();   // handrail
+    g.strokeStyle = OUT; g.lineWidth = 2;
+    g.fillStyle = "#14091a"; g.beginPath(); g.roundRect(bEnd - lw * 0.2, by - br, lw * 0.24, br * 2, br * 0.35); g.fill(); g.stroke();   // smokebox
+    g.fillStyle = "#3a2a46"; g.beginPath(); g.arc(front - lw * 0.04, by, br * 0.62, 0, TAU); g.fill();            // smokebox door
+    g.fillStyle = GOLD; g.beginPath(); g.arc(front - lw * 0.04, by, br * 0.18, 0, TAU); g.fill();
+    g.fillStyle = GOLD; g.beginPath(); g.ellipse(bx + lw * 0.42, by - br, lw * 0.05, br * 0.4, 0, Math.PI, 0); g.fill(); g.stroke();   // brass dome
+    g.fillStyle = "#14091a"; g.beginPath(); g.ellipse(bx + lw * 0.6, by - br, lw * 0.045, br * 0.32, 0, Math.PI, 0); g.fill(); g.stroke();   // sand dome
+    g.fillStyle = GOLD; g.fillRect(bx + lw * 0.2 - 1, by - br - ch * 0.16, 3, ch * 0.16);                          // whistle
+    const cx = bEnd - lw * 0.1, ctop = by - br;                                  // chimney: tall, flared, with a copper rim
+    g.fillStyle = "#14091a"; g.fillRect(cx - ch * 0.07, ctop - ch * 0.3, ch * 0.14, ch * 0.32);
+    g.beginPath(); g.moveTo(cx - ch * 0.07, ctop - ch * 0.3); g.lineTo(cx - ch * 0.15, ctop - ch * 0.46); g.lineTo(cx + ch * 0.15, ctop - ch * 0.46); g.lineTo(cx + ch * 0.07, ctop - ch * 0.3); g.closePath(); g.fill();
+    g.fillStyle = "#d0864a"; g.fillRect(cx - ch * 0.16, ctop - ch * 0.5, ch * 0.32, ch * 0.05);
+    g.fillStyle = "#14091a"; g.fillRect(front - lw * 0.34, gy - ch * 0.56, lw * 0.2, ch * 0.2); g.strokeRect(front - lw * 0.34, gy - ch * 0.56, lw * 0.2, ch * 0.2);   // cylinder
+    const d = [lx + lw * 0.3, lx + lw * 0.52, lx + lw * 0.74].map((x, i) => driver(g, x, gy - dr, dr, spin + i * 0.0));
+    g.strokeStyle = "#e9dcb4"; g.lineWidth = Math.max(2, ch * 0.05); g.lineCap = "round";                          // connecting rod, piston rod
+    g.beginPath(); g.moveTo(d[0][0], d[0][1]); g.lineTo(d[2][0], d[2][1]); g.stroke();
+    g.beginPath(); g.moveTo(front - lw * 0.28, gy - ch * 0.46); g.lineTo(d[2][0], d[2][1]); g.stroke();
+    g.lineCap = "butt"; g.strokeStyle = OUT; g.lineWidth = 2;
+    wheel(g, lx + lw * 0.92, gy - wr * 1.1, wr * 1.1, RED);                                                         // leading wheel
+    g.fillStyle = RED; g.fillRect(front - 2, gy - ch * 0.62, 4, ch * 0.34); g.strokeRect(front - 2, gy - ch * 0.62, 4, ch * 0.34);   // buffer beam
+    g.fillStyle = "#d9d9e6"; g.beginPath(); g.arc(front + 3, gy - ch * 0.56, ch * 0.05, 0, TAU); g.arc(front + 3, gy - ch * 0.34, ch * 0.05, 0, TAU); g.fill();   // buffers
+    // the headlight: a lamp on top of the smokebox, glowing, with a long beam ahead of the train
+    const hx = front - lw * 0.04, hy = by - br - ch * 0.1;
+    g.fillStyle = "#14091a"; g.fillRect(hx - ch * 0.1, hy - ch * 0.06, ch * 0.2, ch * 0.2); g.strokeRect(hx - ch * 0.1, hy - ch * 0.06, ch * 0.2, ch * 0.2);
+    g.fillStyle = "#fff6c8"; g.beginPath(); g.arc(hx + ch * 0.1, hy + ch * 0.04, ch * 0.075, 0, TAU); g.fill();
+    const lx2 = hx + ch * 0.1, ly2 = hy + ch * 0.04;
+    const beam = g.createLinearGradient(lx2, 0, lx2 + ch * 6, 0); beam.addColorStop(0, "rgba(255,240,180,.6)"); beam.addColorStop(1, "rgba(255,240,180,0)");
+    g.fillStyle = beam; g.beginPath(); g.moveTo(lx2, ly2 - ch * 0.05); g.lineTo(lx2 + ch * 6, ly2 - ch * 0.95); g.lineTo(lx2 + ch * 6, ly2 + ch * 0.95); g.lineTo(lx2, ly2 + ch * 0.05); g.closePath(); g.fill();
+    const hl = g.createRadialGradient(lx2, ly2, 0, lx2, ly2, ch * 1.4); hl.addColorStop(0, "rgba(255,240,180,.8)"); hl.addColorStop(1, "rgba(255,240,180,0)");
+    g.fillStyle = hl; g.fillRect(lx2 - ch * 1.4, ly2 - ch * 1.4, ch * 2.8, ch * 2.8);
     // steam from the chimney, left behind in the air as the train moves on
     puffAt -= dt;
-    if (puffAt <= 0) { puffs.push({ x: cx, y: ctop - ch * 0.42, r: ch * 0.14, a: 0.8 }); puffAt = 0.16; }
+    if (puffAt <= 0) { puffs.push({ x: cx, y: ctop - ch * 0.55, r: ch * 0.15, a: 0.8 }); puffAt = 0.15; }
     for (const p of puffs) { p.y -= ch * 0.55 * dt; p.x -= ch * 0.18 * dt; p.r += ch * 0.22 * dt; p.a -= dt * 0.3; }
     puffs = puffs.filter((p) => p.a > 0);
     for (const p of puffs) { g.globalAlpha = p.a * 0.7; g.fillStyle = "#f6e6f0"; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
