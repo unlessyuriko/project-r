@@ -208,7 +208,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
 
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, dprMax);
-    w = innerWidth; h = innerHeight;
+    w = document.documentElement.clientWidth || innerWidth; h = innerHeight;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     canvas.style.width = w + "px"; canvas.style.height = h + "px";
     build();

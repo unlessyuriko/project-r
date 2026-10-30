@@ -39,6 +39,15 @@ function labelFor(p) {
 }
 
 // ---------- viewer ----------
+function fitPhoto() {                               // size from the real visible area: phone browser bars make vh units unreliable
+  const m = $("#modal"), im = $("#photo");
+  if (m.hidden) return;
+  const phone = innerWidth <= 700;
+  im.style.maxHeight = Math.max(160, m.clientHeight - (phone ? 200 : 130)) + "px";
+  im.style.maxWidth = Math.min(m.clientWidth * (phone ? 0.94 : 0.8), 460) + "px";
+}
+addEventListener("resize", fitPhoto);
+$("#photo").addEventListener("load", fitPhoto);
 function show(p, dir = 0) {
   if (p < 0 || p >= photos.length) return;
   current = p;
@@ -48,6 +57,7 @@ function show(p, dir = 0) {
   im.src = photos[p].src;
   $("#dayLabel").textContent = labelFor(p);
   $("#modal").hidden = false;
+  fitPhoto();
   document.body.style.overflow = "hidden";
   setTimeout(() => { if (!$("#modal").hidden) backdrop.paused = true; }, 450);   // save battery while a photo covers the screen
   if (!opened.has(p)) {
