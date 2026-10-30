@@ -12,9 +12,9 @@ const mulberry = (seed) => () => {
 const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
 
 // ---------- sprites ----------
-export function roseSprite(tone) {                   // [shadow red, mid red, bright red]; long-stem anime rose, bloom centred at (100,92)
+export function roseSprite(tone) {                   // [shadow red, mid red, bright red]; stemless red-velvet anime rose, bloom centred at (100,92)
   const [dk, md, br] = tone;
-  const c = canvasOf(200, 340), g = c.getContext("2d");
+  const c = canvasOf(200, 180), g = c.getContext("2d");
   g.lineJoin = "round"; g.lineCap = "round";
   const draw = (d, fill, mirror) => {
     g.save(); if (mirror) { g.translate(200, 0); g.scale(-1, 1); }
@@ -27,24 +27,6 @@ export function roseSprite(tone) {                   // [shadow red, mid red, br
     g.save(); if (mirror) { g.translate(200, 0); g.scale(-1, 1); }
     g.lineWidth = w; g.strokeStyle = col; g.stroke(new Path2D(d)); g.restore();
   };
-  // stem (ink edge, then green core)
-  const stem = new Path2D("M100 150 C94 210 108 270 100 336");
-  g.lineWidth = 13; g.strokeStyle = INK; g.stroke(stem);
-  g.lineWidth = 7; g.strokeStyle = "#2fae63"; g.stroke(stem);
-  g.lineWidth = 2.5; g.strokeStyle = "#8be0a6"; g.stroke(new Path2D("M97 160 C93 215 104 270 97 330"));
-  const leaf = (x, y, rot, flip) => {
-    g.save(); g.translate(x, y); if (flip) g.scale(-1, 1); g.rotate(rot);
-    const lp = new Path2D("M0 0 C22 -30 62 -34 88 -12 C62 16 22 20 0 0Z");
-    g.fillStyle = "#34b868"; g.fill(lp); g.lineWidth = 5; g.strokeStyle = INK; g.stroke(lp);
-    g.fillStyle = "#1f8a4c"; g.fill(new Path2D("M4 2 C28 4 62 4 84 -10 C62 16 22 20 0 0Z"));
-    g.lineWidth = 2.5; g.strokeStyle = "#8be0a6"; g.stroke(new Path2D("M8 -2 C30 -10 56 -12 76 -12"));
-    g.lineWidth = 5; g.strokeStyle = INK; g.stroke(lp);
-    g.restore();
-  };
-  leaf(103, 262, -0.5, false); leaf(98, 214, -0.45, true);
-  // sepals under the bloom
-  for (const m of [false, true]) draw("M100 148 C84 152 62 150 44 136 C62 166 88 172 100 160Z", "#2fae63", m);
-  draw("M100 150 C92 168 94 184 100 194 C106 184 108 168 100 150Z", "#2fae63", false);
   // back petals
   for (const m of [false, true]) draw("M100 154 C50 150 28 100 40 60 C46 40 66 30 84 38 C70 72 78 126 100 154Z", dk, m);
   // cup
@@ -68,15 +50,15 @@ export function roseSprite(tone) {                   // [shadow red, mid red, br
   line("M84 72 C84 56 94 48 102 50 C112 52 114 64 106 68 C98 72 94 62 100 58", INK, 4.5, false);
   line("M58 82 C72 66 86 66 100 72 C114 66 128 66 142 82", INK, 4.5, false);
   // glossy highlights
-  line("M66 66 C64 50 72 36 84 28", "rgba(255,255,255,.9)", 5, false);
-  line("M48 110 C46 124 52 138 62 148", "rgba(255,255,255,.75)", 4, false);
+  line("M66 66 C64 50 72 36 84 28", "rgba(255,150,170,.55)", 5, false);       // soft velvet sheen, not glossy white
+  line("M48 110 C46 124 52 138 62 148", "rgba(255,150,170,.4)", 4, false);
   return c;
 }
 function petalSprite() {
   const c = canvasOf(48, 64), g = c.getContext("2d");
   g.beginPath(); g.moveTo(24, 4); g.bezierCurveTo(54, 18, 46, 56, 24, 60); g.bezierCurveTo(2, 56, -6, 18, 24, 4);
-  g.fillStyle = "#ff3d6e"; g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke();
-  g.beginPath(); g.arc(18, 24, 10, Math.PI * 1.1, Math.PI * 1.7); g.lineWidth = 3; g.strokeStyle = "rgba(255,255,255,.8)"; g.stroke();
+  g.fillStyle = "#860d25"; g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke();
+  g.beginPath(); g.arc(18, 24, 10, Math.PI * 1.1, Math.PI * 1.7); g.lineWidth = 3; g.strokeStyle = "rgba(255,150,170,.5)"; g.stroke();
   return c;
 }
 function cloudSprite() {
@@ -171,9 +153,9 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   let paused = false, raf = 0, stars = [], clouds = [], roses = [], petals = [];
   const cloudImg = cloudSprite(), petalImg = petalSprite();
   const roseImgs = [
-    roseSprite(["#b3123f", "#d91e4e", "#ff3d6e"]),
-    roseSprite(["#a30f38", "#cc1a48", "#f0305f"]),
-    roseSprite(["#c4163f", "#e5254f", "#ff5577"]),
+    roseSprite(["#4e0715", "#7d0c22", "#a4132f"]),                // red velvet: deep crimson
+    roseSprite(["#560818", "#870d25", "#b01634"]),
+    roseSprite(["#470612", "#740b20", "#9a1129"]),
   ];
 
   function build() {
@@ -245,7 +227,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     const R = mulberry(5);
     stars = Array.from({ length: mobile ? 34 : 64 }, () => ({ x: R() * w, y: R() * h * 0.55, r: 1.5 + R() * 3.5, sp: 0.8 + R() * 2, ph: R() * TAU }));
     clouds = Array.from({ length: mobile ? 4 : 6 }, (_, i) => ({ x: R() * w, y: h * (0.06 + R() * 0.34), s: 0.45 + R() * 0.6, v: 5 + R() * 9, a: 0.5 + R() * 0.35, i }));
-    const rs = Math.max(0.3, Math.min(0.5, w / 1100)) * (mobile ? 0.8 : 1);
+    const rs = Math.max(0.3, Math.min(0.5, w / 1100)) * (mobile ? 0.8 : 1) * 1.3;
     roses = Array.from({ length: mobile ? 9 : 15 }, () => ({
       x: R() * w, y: R() * (h + 240) - 240, vy: 18 + R() * 26, ph: R() * TAU, sw: 14 + R() * 22,
       rot: (R() - 0.5) * 0.9, rv: (R() - 0.5) * 0.5, s: rs * (0.55 + R() * 0.7), img: roseImgs[(R() * 3) | 0],
@@ -304,7 +286,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       r.y += r.vy * dt; r.rot += r.rv * dt * 0.3;
       if (r.y > h + 140) { r.y = -200; r.x = Math.random() * w; }
       ctx.save(); ctx.translate(r.x + Math.sin(t * 0.6 + r.ph) * r.sw, r.y); ctx.rotate(r.rot + Math.sin(t * 0.9 + r.ph) * 0.18);
-      ctx.drawImage(r.img, -100 * r.s, -92 * r.s, 200 * r.s, 340 * r.s); ctx.restore();
+      ctx.drawImage(r.img, -100 * r.s, -92 * r.s, 200 * r.s, 180 * r.s); ctx.restore();
     }
     const hr = getRect && getRect();                   // sparkles orbiting the heart
     if (hr && hr.width) {
