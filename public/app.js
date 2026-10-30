@@ -147,7 +147,8 @@ function gate() {
 }
 
 // ---------- horizontal spin ----------
-let ang = 0, vel = 0, dragging = false, idleSince = 0;
+let ang = 0, vel = 0, dragging = false, idleSince = 0, flip = null;   // flip = scripted full turn after a tap
+const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const PERSPECTIVE = 1100;
 function applySpin() {
   const sp = $("#spin");
@@ -156,6 +157,13 @@ function applySpin() {
 }
 function spinLoop() {
   requestAnimationFrame(spinLoop);
+  if (flip) {
+    const t = Math.min(1, (performance.now() - flip.t0) / flip.ms);
+    ang = flip.from + 360 * easeInOut(t);
+    if (t >= 1) { ang = flip.from + 360; flip = null; idleSince = performance.now(); }
+    applySpin();
+    return;
+  }
   if (dragging || $("#modal").hidden === false) return;
   if (Math.abs(vel) > 0.02) { ang += vel; vel *= 0.94; idleSince = performance.now(); }
   else {
@@ -191,6 +199,7 @@ function bindHeart() {
   const cv = $("#heart"), st = $("#stage");
   let down = null, moved = false;
   cv.addEventListener("pointerdown", (e) => {
+    if (flip) return;                                // busy turning after a tap
     down = { x: e.clientX, last: e.clientX }; moved = false; dragging = true; vel = 0;
     cv.setPointerCapture(e.pointerId);
   });
@@ -218,8 +227,11 @@ function bindHeart() {
       const c = pick(e.clientX, e.clientY);
       if (c >= 0) {
         burst(e.clientX, e.clientY);
-        st.classList.remove("kick"); void st.offsetWidth; st.classList.add("kick");
-        show(heart.cellPhoto[c]);
+        const MS = 750;                              // the heart spins once, then the photo opens
+        flip = { from: ang, t0: performance.now(), ms: MS };
+        vel = 0;
+        const photo = heart.cellPhoto[c];
+        setTimeout(() => { st.classList.remove("kick"); void st.offsetWidth; st.classList.add("kick"); show(photo); }, MS - 120);
       }
     }
   };
