@@ -310,3 +310,14 @@ body:not(.on-hero) .swipe-cue { visibility: hidden; }
   .page .sec, .page .sec > *, .hero > * { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; letter-spacing: normal !important; }
   .swipe-cue { animation: none; }
 }
+
+/* ---- touch devices: native snapping, no blur filters (they make swiping janky) ---- */
+html.touch-snap { scroll-snap-type: y mandatory; overscroll-behavior-y: none; }
+html.touch-snap .page { scroll-snap-align: start; scroll-snap-stop: always; }
+html.touch-snap .page:not(.hero) .sec, html.touch-snap .page:not(.hero) .sec > *, html.touch-snap .hero > * { filter: none !important; }
+html.touch-snap .page:not(.hero) .sec { transform: translateY(50px) scale(.94); }
+html.touch-snap .page.pg-in:not(.hero) .sec { transform: none; }
+html.touch-snap .page:not(.hero) .sec { will-change: transform, opacity; }
+html.touch-snap .cine-vignette { display: none; }
+/* body must not become its own scroll container, or the page snap points would attach to it instead of the screen */
+html, body { overflow-x: clip; overflow-y: visible; }

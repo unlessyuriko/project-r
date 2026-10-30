@@ -56,6 +56,12 @@ export function initPages() {
   }), { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
   pages.forEach((p) => io.observe(p));
 
+  // Touch screens: the browser's own scroll snapping (CSS, runs on the compositor) feels native and never fights the finger.
+  // The scripted glide below is only for mouse wheels and trackpads.
+  const touch = matchMedia("(pointer: coarse)").matches;
+  document.documentElement.classList.toggle("touch-snap", touch);
+  if (touch) return;
+
   // never rest between pages: when scrolling stops, glide to the page that was swiped towards
   const tops = () => pages.map((p) => p.getBoundingClientRect().top + scrollY);
   let startY = null, timer = 0, target = null, rest = scrollY;   // rest: where the page last came to rest
