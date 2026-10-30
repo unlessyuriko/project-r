@@ -210,7 +210,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     bill = null;
     if (billImg.complete && billImg.naturalWidth) {
       const bh2 = wide ? Math.min(h * 0.25, w * 0.62) : Math.min(h * 0.17, w * 0.3 * 1.5), bw2 = bh2 * 0.667, bx = wide ? Math.max(bw2 * 0.62, w * 0.17) : w * 0.8, by = h * (wide ? 0.13 : 0.42);
-      const fh = bh2 + bw2 * 0.2, frameB = by + fh, towerTop = frameB + bh2 * 0.1, rb = mulberry(31);
+      const fh = bh2 + bw2 * 0.34, frameB = by + fh, towerTop = frameB + bh2 * 0.1, rb = mulberry(31);
       tower(g, bx, farBase, bw2 * 0.78, farBase - towerTop, { wall: "#3b2a7a", shade: "#2f2166", line: "#241552", window: "#2a1b5c" }, rb, wins, 0);
       g.fillStyle = "#1c0f3e"; g.fillRect(bx - bw2 * 0.28, frameB, 3, towerTop - frameB + 2); g.fillRect(bx + bw2 * 0.28 - 3, frameB, 3, towerTop - frameB + 2);   // posts
       const fx = bx - bw2 / 2 - 6, fw = bw2 + 12;
@@ -222,12 +222,12 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       g.save(); g.beginPath(); g.roundRect(bx - bw2 / 2, by + 6, bw2, bh2 - 6, 5); g.clip();
       const ir = billImg.naturalWidth / billImg.naturalHeight, tw = bw2, th = tw / ir;
       g.drawImage(billImg, bx - bw2 / 2, by + 6 + (bh2 - 6 - th) / 2, tw, th); g.restore();
-      const fs = Math.max(8, bw2 * 0.072);                                                              // caption plate under the picture
+      const fs = Math.max(7, bw2 * 0.064);                                                              // caption plate under the picture
       g.fillStyle = "#fff3d6"; g.textAlign = "center"; g.textBaseline = "middle";
       g.font = `900 ${fs}px "Zen Maru Gothic", system-ui, sans-serif`;
-      g.fillText("Ye Pyae ♥ May Thu", bx, by + bh2 + (fh - bh2) * 0.36);
-      g.fillStyle = "#ffb6c8"; g.font = `700 ${fs * 0.72}px "Zen Maru Gothic", system-ui, sans-serif`;
-      g.fillText("Better together · since 1 Aug 2026", bx, by + bh2 + (fh - bh2) * 0.74);
+      g.fillText("Ye Pyae ♥ May Thu", bx, by + bh2 + (fh - bh2) * 0.3);
+      g.fillStyle = "#ffb6c8"; g.font = `700 ${fs * 0.8}px "Zen Maru Gothic", system-ui, sans-serif`;
+      g.fillText("since 1 Aug 2026", bx, by + bh2 + (fh - bh2) * 0.72);
       for (let i = 0; i < 7; i++) bulbs.push([fx + 6 + (fw - 12) * (i / 6), by - 2, i % 3, rb() * 6.28]);   // lamps along the top edge
       bill = { x: bx, y: by + fh / 2, r: bw2 };
     }
@@ -259,23 +259,50 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     clouds = Array.from({ length: mobile ? 4 : 6 }, (_, i) => ({ x: R() * w, y: h * (0.06 + R() * 0.34), s: 0.45 + R() * 0.6, v: 5 + R() * 9, a: 0.5 + R() * 0.35, i }));
   }
 
-  function train(g) {
-    const ch = trainH, cw = ch * 2.7, y = trainY - ch - 2;
-    const total = cw * 5.8, x0 = ((t * 28) % (w + total * 2)) - total * 1.4;
-    g.save(); g.lineJoin = "round"; g.lineWidth = 2.5; g.strokeStyle = "#140a2c";
-    for (let i = 0; i < 5; i++) {
-      const x = x0 + i * (cw + 3);
-      g.fillStyle = "#4e2d86"; g.fillRect(x, y, cw, ch); g.strokeRect(x, y, cw, ch);
-      g.fillStyle = "#35205f"; g.fillRect(x, y + ch * 0.72, cw, ch * 0.28);
-      g.fillStyle = "#e0a85a"; g.fillRect(x, y + ch * 0.64, cw, ch * 0.08);
-      for (let k = 0; k < 5; k++) { g.fillStyle = "#ffd890"; g.fillRect(x + cw * (0.07 + k * 0.18), y + ch * 0.18, cw * 0.12, ch * 0.34); }
+  let puffs = [], puffAt = 0;
+  function wheel(g, x, y, r, hub) {
+    g.fillStyle = "#140a1c"; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill();
+    g.fillStyle = hub; g.beginPath(); g.arc(x, y, r * 0.45, 0, TAU); g.fill();
+  }
+  function train(g, dt) {
+    const ch = trainH, cw = ch * 2.7, y = trainY - ch - 2, nCar = 4, lw = cw * 1.25, gap = 3;
+    const total = (cw + gap) * nCar + lw, x0 = ((t * 28) % (w + total * 2)) - total * 1.4;
+    const lx = x0 + (cw + gap) * nCar, front = lx + lw, wr = ch * 0.17;
+    g.save(); g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = "#140a1c";
+    for (let i = 0; i < nCar; i++) {                   // scarlet carriages with a gold stripe and lit windows
+      const x = x0 + i * (cw + gap);
+      g.fillStyle = "#a8142c"; g.fillRect(x, y + ch * 0.08, cw, ch * 0.78); g.strokeRect(x, y + ch * 0.08, cw, ch * 0.78);
+      g.fillStyle = "#2a0d18"; g.fillRect(x - 1, y, cw + 2, ch * 0.12);
+      g.fillStyle = "#e8b04a"; g.fillRect(x, y + ch * 0.62, cw, ch * 0.05);
+      for (let k = 0; k < 4; k++) { g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(x + cw * (0.1 + k * 0.22), y + ch * 0.22, cw * 0.14, ch * 0.3, 2); g.fill(); }
+      wheel(g, x + cw * 0.2, y + ch * 0.9, wr, "#a8142c"); wheel(g, x + cw * 0.8, y + ch * 0.9, wr, "#a8142c");
     }
-    const lx = x0 - cw * 0.85;                         // locomotive + headlight
-    g.fillStyle = "#6a3a52"; g.fillRect(lx, y, cw * 0.8, ch); g.strokeRect(lx, y, cw * 0.8, ch);
-    g.fillStyle = "#ffe9a8"; g.fillRect(lx + cw * 0.12, y + ch * 0.2, cw * 0.18, ch * 0.3);
-    const hl = g.createRadialGradient(lx, y + ch * 0.5, 0, lx, y + ch * 0.5, ch * 2.2);
-    hl.addColorStop(0, "rgba(255,230,160,.5)"); hl.addColorStop(1, "rgba(255,230,160,0)");
-    g.fillStyle = hl; g.fillRect(lx - ch * 2.2, y - ch, ch * 2.4, ch * 3);
+    // locomotive: cab at the back, boiler, tall chimney, brass dome, cowcatcher and the lamp at the front
+    g.fillStyle = "#7a1020"; g.fillRect(lx, y - ch * 0.04, lw * 0.3, ch * 0.9); g.strokeRect(lx, y - ch * 0.04, lw * 0.3, ch * 0.9);
+    g.fillStyle = "#1a0b16"; g.fillRect(lx - 2, y - ch * 0.12, lw * 0.3 + 4, ch * 0.1);
+    g.fillStyle = "#ffd890"; g.beginPath(); g.roundRect(lx + lw * 0.06, y + ch * 0.12, lw * 0.16, ch * 0.3, 2); g.fill();
+    g.fillStyle = "#b01830"; g.beginPath(); g.roundRect(lx + lw * 0.3, y + ch * 0.26, lw * 0.64, ch * 0.6, ch * 0.2); g.fill(); g.stroke();
+    g.fillStyle = "#e8b04a"; g.fillRect(lx + lw * 0.52, y + ch * 0.27, 3, ch * 0.58); g.fillRect(lx + lw * 0.74, y + ch * 0.27, 3, ch * 0.58);
+    g.fillStyle = "#14091a"; g.beginPath(); g.roundRect(lx + lw * 0.82, y + ch * 0.28, lw * 0.14, ch * 0.56, ch * 0.12); g.fill(); g.stroke();   // smokebox
+    const cx = lx + lw * 0.74, ctop = y + ch * 0.26;                          // chimney with a flared top
+    g.fillStyle = "#14091a"; g.fillRect(cx - ch * 0.07, ctop - ch * 0.26, ch * 0.14, ch * 0.28);
+    g.beginPath(); g.moveTo(cx - ch * 0.07, ctop - ch * 0.26); g.lineTo(cx - ch * 0.14, ctop - ch * 0.4); g.lineTo(cx + ch * 0.14, ctop - ch * 0.4); g.lineTo(cx + ch * 0.07, ctop - ch * 0.26); g.closePath(); g.fill();
+    g.fillStyle = "#e8b04a"; g.beginPath(); g.arc(lx + lw * 0.5, y + ch * 0.26, ch * 0.1, Math.PI, 0); g.fill();
+    g.fillStyle = "#14091a"; g.beginPath(); g.moveTo(front, y + ch * 0.86); g.lineTo(front + ch * 0.28, y + ch * 0.93); g.lineTo(front, y + ch * 0.93); g.closePath(); g.fill();
+    wheel(g, lx + lw * 0.2, y + ch * 0.86, wr * 1.5, "#a8142c"); wheel(g, lx + lw * 0.52, y + ch * 0.88, wr * 1.2, "#a8142c"); wheel(g, lx + lw * 0.84, y + ch * 0.88, wr * 1.2, "#a8142c");
+    const hx = front + 1, hy = y + ch * 0.5;                                   // the headlight, on the nose
+    g.fillStyle = "#fff6c8"; g.beginPath(); g.arc(hx, hy, ch * 0.09, 0, TAU); g.fill();
+    const beam = g.createLinearGradient(hx, 0, hx + ch * 5.5, 0); beam.addColorStop(0, "rgba(255,240,180,.55)"); beam.addColorStop(1, "rgba(255,240,180,0)");
+    g.fillStyle = beam; g.beginPath(); g.moveTo(hx, hy - ch * 0.05); g.lineTo(hx + ch * 5.5, hy - ch * 0.9); g.lineTo(hx + ch * 5.5, hy + ch * 0.9); g.lineTo(hx, hy + ch * 0.05); g.closePath(); g.fill();
+    const hl = g.createRadialGradient(hx, hy, 0, hx, hy, ch * 1.4); hl.addColorStop(0, "rgba(255,240,180,.75)"); hl.addColorStop(1, "rgba(255,240,180,0)");
+    g.fillStyle = hl; g.fillRect(hx - ch * 1.4, hy - ch * 1.4, ch * 2.8, ch * 2.8);
+    // steam from the chimney, left behind in the air as the train moves on
+    puffAt -= dt;
+    if (puffAt <= 0) { puffs.push({ x: cx, y: ctop - ch * 0.42, r: ch * 0.14, a: 0.8 }); puffAt = 0.16; }
+    for (const p of puffs) { p.y -= ch * 0.55 * dt; p.x -= ch * 0.18 * dt; p.r += ch * 0.22 * dt; p.a -= dt * 0.3; }
+    puffs = puffs.filter((p) => p.a > 0);
+    for (const p of puffs) { g.globalAlpha = p.a * 0.7; g.fillStyle = "#f6e6f0"; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
+    g.globalAlpha = 1;
     g.restore();
   }
 
@@ -295,7 +322,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
       ctx.globalAlpha = c.a; ctx.drawImage(cloudImg, c.x, c.y, 300 * c.s, 120 * c.s);
     }
     ctx.globalAlpha = 1;
-    train(ctx);
+    train(ctx, dt);
     ctx.globalCompositeOperation = "lighter";
     for (const [x, y, sz, ph, sp] of wins) {           // lit windows breathe
       const k = 0.5 + 0.5 * Math.sin(t * sp + ph), fl = Math.sin(t * 7 + ph * 9) > 0.985 ? 0.25 : 1;
