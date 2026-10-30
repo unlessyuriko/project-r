@@ -2,7 +2,7 @@
 // and a white "sticker" rim. One piece per photo; opened pieces turn pale pink with a doodle heart.
 export const INK = "#3a0a24";
 const BASE_W = 1024, BASE_H = 920, BASE_SC = 28;
-const REDS = [[255, 61, 110], [255, 84, 130], [240, 46, 94], [255, 106, 142], [230, 38, 88]];
+const REDS = [[255, 66, 112], [255, 74, 120], [250, 58, 106], [255, 80, 124], [246, 54, 102]];   // near-identical: pieces differ only slightly
 
 const mulberry = (seed) => () => {
   seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -88,7 +88,7 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
     if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y;
   }
   const edge = new Uint8Array(W * H);                 // inked lines between pieces
-  const E = Math.max(2, Math.round(3 * Q));
+  const E = Math.max(1, Math.round(1.5 * Q));
   for (let y = E; y < H - E; y++) for (let x = E; x < W - E; x++) {
     const o = owner[y * W + x];
     if (o < 0) continue;
@@ -112,22 +112,21 @@ export function createHeart(canvas, n, { mobile, isOpen }) {
   function paintPixel(i, x, y) {
     const p = i * 4, o = owner[i];
     if (o < 0) { px[p + 3] = 0; return; }
-    const s = seeds[o], R = radius[o];
-    const dx = (x - s.x) / R, dy = (y - s.y) / R;
-    const lit = dx * 0.55 + dy * 0.83;                // >0 = lower-right of the cushion
+    // shade the heart as ONE object (a single light direction across the whole shape), so the pieces read as
+    // facets of one heart instead of separate fragments
+    const lit = ((x - W / 2) * 0.55 + (y - H / 2) * 0.83) / (W * 0.36);   // >0 = lower-right of the heart
     const open = isOpen(cellPhoto[o]);
     let [r, g, b] = open ? [255, 228, 238] : base[o];
-    if (lit > 0.34) {                                  // cel shadow (flat band) + screentone dots
-      r *= 0.74; g *= open ? 0.8 : 0.5; b *= open ? 0.84 : 0.6;
+    if (lit > 0.3) {                                   // one flat cel-shadow band + screentone dots
+      r *= 0.8; g *= open ? 0.82 : 0.58; b *= open ? 0.86 : 0.66;
       const gx = (x % dotP) - dotP / 2, gy = (y % dotP) - dotP / 2;
-      if (gx * gx + gy * gy < dotP * 0.45) { r *= 0.88; g *= 0.8; b *= 0.85; }
-    } else if (lit < -0.5 && dx * dx + dy * dy < 0.9) { // cel highlight patch
-      r += 36; g += open ? 18 : 62; b += open ? 14 : 52;
+      if (gx * gx + gy * gy < dotP * 0.45) { r *= 0.9; g *= 0.82; b *= 0.87; }
     }
     if (o === hover) { r += 38; g += 44; b += 44; }
-    if (edge[i]) {
+    if (edge[i]) {                                     // thin seam in a deeper tone of the heart, not black ink
       if (o === hover) { r = 255; g = 245; b = 250; }
-      else { r = 58; g = 10; b = 36; }
+      else if (open) { r = 235; g = 170; b = 195; }
+      else { r *= 0.62; g *= 0.5; b *= 0.55; }
     }
     px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = 255;
   }
