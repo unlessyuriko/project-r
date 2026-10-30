@@ -1,6 +1,7 @@
 import { createHeart } from "./heart.js";
 import { createBackdrop } from "./backdrop.js";
 import { createScene } from "./heart3d.js";
+import { initExtras } from "./extras.js";
 
 const cfg = window.LOVE_CONFIG || {};
 const $ = (s) => document.querySelector(s);
@@ -258,6 +259,7 @@ async function init() {
   addEventListener("resize", () => backdrop.resize());
   bindHeart();
   updateProgress();
+  initExtras(cfg, { burst });
   $("#loader").hidden = true;
 }
 init();
