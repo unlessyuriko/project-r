@@ -55,4 +55,34 @@ export function initPages() {
     }
   }), { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
   pages.forEach((p) => io.observe(p));
+
+  // never rest between pages: when scrolling stops, glide to the page that was swiped towards
+  const tops = () => pages.map((p) => p.getBoundingClientRect().top + scrollY);
+  let startY = null, timer = 0, target = null, rest = scrollY;   // rest: where the page last came to rest
+  const settle = () => {
+    const y = scrollY, vh = innerHeight, t = tops();
+    if (startY == null && target == null) return;
+    if (target != null) startY = y;                                                 // a glide was cut short: just pick the nearest page
+    target = null;
+    const dir = Math.sign(y - startY), moved = Math.abs(y - startY);
+    startY = null; rest = y;
+    let cur = 0; t.forEach((v, i) => { if (v <= y + 4) cur = i; });                // page whose top we have passed
+    const bottom = (t[cur + 1] ?? document.documentElement.scrollHeight) - vh;      // lowest scroll position inside this page
+    if (y > t[cur] + 4 && y < bottom - 4) return;                                   // reading inside a tall page: leave it
+    if (Math.abs(y - t[cur]) < 3) return;                                          // already on a page
+    let to = cur;
+    if (dir < 0 && moved > 8) to = cur;                                             // swiped back: return to this page
+    else if (y >= bottom - 4 && cur + 1 < t.length) to = cur + 1;
+    else if (dir > 0 && moved > 8 && y > t[cur] + 4) to = Math.min(cur + 1, t.length - 1);   // swiped up: go to the next page
+    else to = (y - t[cur] > ((t[cur + 1] ?? t[cur] + vh) - t[cur]) / 2 && cur + 1 < t.length) ? cur + 1 : cur;
+    if (Math.abs(y - t[to]) < 3) return;
+    target = rest = t[to];
+    scrollTo({ top: target, behavior: "smooth" });
+  };
+  addEventListener("scroll", () => {
+    if (target != null && Math.abs(scrollY - target) < 3) { target = null; startY = null; rest = scrollY; clearTimeout(timer); return; }   // arrived
+    if (startY == null) startY = rest;
+    clearTimeout(timer);
+    timer = setTimeout(settle, target != null ? 450 : 110);   // while gliding, wait longer so slow frames do not retrigger
+  }, { passive: true });
 }

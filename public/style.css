@@ -262,10 +262,10 @@ body::before { display: none; }
 .wheel { box-shadow: 0 8px 22px rgba(20, 8, 50, .35); }
 
 /* ---- page by page, with cinematic entrances ---- */
-html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+html { scroll-behavior: auto; }
 main { padding: 0 16px; gap: 0; }
 .page {
-  width: 100%; min-height: 100vh; min-height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always;
+  width: 100%; min-height: 100vh; min-height: 100dvh;
   display: grid; place-items: center; align-content: center; justify-items: center; gap: 10px;
   padding: max(24px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
 }
