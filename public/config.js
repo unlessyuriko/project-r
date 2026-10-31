@@ -24,8 +24,8 @@ window.LOVE_CONFIG = {
   },
 
   reasons: {
-    title: "Things I love about you",
-    sub: "The short version. The long one would not fit.",
+    title: "Top 6 reasons I love you",
+    sub: "Just the top 6. There are far more than I can list.",
     list: [
       "You are always yourself.",
       "You appreciate whatever I do for you, big or small.",
