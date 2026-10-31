@@ -27,12 +27,12 @@ window.LOVE_CONFIG = {
     title: "Top 6 reasons I love you",
     sub: "Just the top 6. There are far more than I can list.",
     list: [
-      "Because you are so beautifully yourself, my love, and my heart fell for every bit of it.",
-      "Because you cherish every little thing I do, and it makes me want to give you my whole world.",
-      "Because your laugh is the sweetest music I have ever heard, and I would chase it forever.",
-      "Because you hold my heart gently, even when the truth is hard to say.",
-      "Because with you, even the quietest day becomes a love story I never want to end.",
-      "Because when I'm down, I find my home against your chest, listening to your heartbeat.",
+      "You're always yourself. I love that about you.",
+      "You appreciate whatever I do for you, even the small things.",
+      "Your real laugh, the loud one.",
+      "You tell me the truth, even when it's hard.",
+      "Every ordinary day is better with you in it.",
+      "You let me rest on your chest when I'm down.",
     ],
   },
 
