@@ -27,12 +27,12 @@ window.LOVE_CONFIG = {
     title: "Things I love about you",
     sub: "The short version. The long one would not fit.",
     list: [
-      "Replace me with something only she would recognise.",
-      "How you remember the small stuff.",
+      "You are always yourself.",
+      "You appreciate whatever I do for you, big or small.",
       "Your real laugh, the loud one.",
       "That you tell me the truth, even when it is hard.",
       "How every ordinary day feels better with you in it.",
-      "The way you say goodnight.",
+      "Letting me rest against your chest when I'm down.",
     ],
   },
 
