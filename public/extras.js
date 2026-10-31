@@ -186,29 +186,38 @@ function loveTest(cfg) {
   const pct = el("p", "pct", ""); const quip = el("p", "sec-sub", "");
   const common = el("div", "lt-common"); common.hidden = true;
   meter.hidden = pct.hidden = quip.hidden = true;
-  // the things they share, scattered below the result in random order, tilt and size
-  const showCommon = () => {
-    const list = (t.common || []).slice().sort(() => Math.random() - 0.5);
-    if (!list.length) return;
-    common.replaceChildren(); common.hidden = false;
-    const tints = ["", " t2", " t3"];
-    list.forEach((txt, i) => {
-      const c = el("span", "chip" + tints[Math.floor(Math.random() * 3)], esc(txt));
-      c.style.setProperty("--r", (Math.random() * 12 - 6).toFixed(1) + "deg");
-      c.style.setProperty("--dy", Math.round(Math.random() * 10 - 5) + "px");
-      c.style.fontSize = (12 + Math.floor(Math.random() * 4)) + "px";
-      c.style.animationDelay = (i * 130 + Math.random() * 120) + "ms";
-      common.appendChild(c);
-    });
+  const tints = ["", " t2", " t3"];
+  // a matched thing drops in as a chip, in random tilt and size
+  const addChip = (txt) => {
+    const c = el("span", "chip" + tints[Math.floor(Math.random() * 3)], esc(txt));
+    c.style.setProperty("--r", (Math.random() * 12 - 6).toFixed(1) + "deg");
+    c.style.setProperty("--dy", Math.round(Math.random() * 10 - 5) + "px");
+    c.style.fontSize = (12 + Math.floor(Math.random() * 4)) + "px";
+    common.appendChild(c);
   };
+  let running = false;
   btn.onclick = () => {
-    common.hidden = true;
+    if (running) return; running = true; btn.disabled = true;
+    const list = (t.common || []).slice().sort(() => Math.random() - 0.5);
+    const per = 650, total = Math.max(2200, list.length * per + 900);
+    common.replaceChildren(); common.hidden = !list.length;
     meter.hidden = pct.hidden = quip.hidden = false;
     fill.style.transition = "none"; fill.style.width = "0%"; void fill.offsetWidth;
-    fill.style.transition = "width 2.2s cubic-bezier(.3,1,.5,1)"; fill.style.width = "100%";
+    fill.style.transition = "width " + total + "ms linear"; fill.style.width = "100%";
+    // while the bar fills, the test "thinks": it checks each shared thing and keeps the ones that match
+    quip.textContent = "Reading your hearts...";
+    list.forEach((txt, i) => {
+      setTimeout(() => { quip.textContent = "Matching: " + txt + "..."; }, 400 + i * per);
+      setTimeout(() => { addChip(txt); quip.textContent = "Match found: " + txt; }, 400 + i * per + per * 0.6);
+    });
     const t0 = performance.now();
-    const step = (now) => { const p = Math.min(1, (now - t0) / 2200); pct.textContent = Math.round(100 * (1 - Math.pow(1 - p, 3))) + "%"; if (p < 1) requestAnimationFrame(step); else { quip.textContent = t.result || "A perfect match."; showCommon(); } };
-    quip.textContent = "Calculating..."; requestAnimationFrame(step);
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / total);
+      pct.textContent = Math.round(100 * p) + "%";
+      if (p < 1) requestAnimationFrame(step);
+      else { quip.textContent = t.result || "A perfect match."; running = false; btn.disabled = false; }
+    };
+    requestAnimationFrame(step);
   };
   s.append(row, btn, meter, pct, quip, common);
   return s;
