@@ -31,6 +31,21 @@ function together(cfg) {
   const next = el("p", "next");
   s.append(grid, total, next);
   const pad = (n) => String(n).padStart(2, "0");
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lastSec = -1;
+  // every new second: the seconds cell beats and a little heart floats up from it
+  const loveBeat = () => {
+    if (calm) return;
+    const cell = cells.seconds.parentElement;
+    if (!s.closest(".page")?.classList.contains("pg-in")) return;
+    cell.classList.remove("beat"); void cell.offsetWidth; cell.classList.add("beat");
+    const h = el("span", "lv", doodle("d-heart"));
+    h.style.setProperty("--dx", (Math.random() * 44 - 22).toFixed(0) + "px");
+    h.style.setProperty("--r", (Math.random() * 40 - 20).toFixed(0) + "deg");
+    h.style.setProperty("--sz", (14 + Math.random() * 10).toFixed(0) + "px");
+    cell.appendChild(h);
+    setTimeout(() => h.remove(), 1700);
+  };
   function tick() {
     const now = new Date();
     if (now < start) { total.textContent = "Not started yet"; return; }
@@ -39,15 +54,10 @@ function together(cfg) {
     const rem = now - addTo(start, y, mo);
     const vals = { years: y, months: mo, days: Math.floor(rem / 864e5), hours: Math.floor(rem / 36e5) % 24, minutes: Math.floor(rem / 6e4) % 60, seconds: Math.floor(rem / 1e3) % 60 };
     for (const k in vals) cells[k].textContent = pad(vals[k]);
+    if (vals.seconds !== lastSec) { if (lastSec !== -1) loveBeat(); lastSec = vals.seconds; }
     const days = Math.floor((now - start) / 864e5) + 1;
     total.textContent = `${days.toLocaleString()} days together`;
-    const months = y * 12 + mo, d0 = vals.days === 0 && rem < 864e5;
-    if (d0 && months > 0) next.textContent = `Happy ${months} ${months === 1 ? "month" : "months"}!`;
-    else {
-      const m2 = months + 1, target = addTo(start, 0, m2), left = Math.ceil((target - now) / 864e5);
-      const label = m2 % 12 === 0 ? `${m2 / 12} ${m2 / 12 === 1 ? "year" : "years"}` : `${m2} months`;
-      next.textContent = `${left} ${left === 1 ? "day" : "days"} to ${label} together`;
-    }
+    next.textContent = "Day 1 to 3 Months TOGETHER ❤️";
   }
   tick(); setInterval(tick, 1000);
   return s;
