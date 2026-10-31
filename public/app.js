@@ -4,6 +4,7 @@ import { createScene } from "./heart3d.js";
 import { initExtras } from "./extras.js";
 import { wrapHero, initPages } from "./pages.js";
 import { initBgm } from "./bgm.js";
+import { initEggs } from "./eggs.js";
 
 wrapHero();
 
@@ -180,11 +181,17 @@ function spinLoop() {
 }
 function bindHeart() {
   const cv = $("#stage"), st = cv;
-  let down = null, moved = false;
+  let down = null, moved = false, hold = 0, held = false;
   cv.addEventListener("pointerdown", (e) => {
     if (flip) return;                                // busy turning after a tap
     down = { x: e.clientX, last: e.clientX }; moved = false; dragging = true; vel = 0;
     cv.setPointerCapture(e.pointerId);
+    clearTimeout(hold);                              // easter egg: press and hold the heart
+    hold = setTimeout(() => {
+      if (!down || moved) return;
+      held = true; vel = 38; dragging = false;
+      dispatchEvent(new CustomEvent("heart-egg", { detail: { x: down.x, y: e.clientY } }));
+    }, 900);
   });
   cv.addEventListener("pointermove", (e) => {
     if (!down) {
@@ -203,8 +210,10 @@ function bindHeart() {
     down.last = e.clientX;
   });
   const end = (e, cancelled) => {
+    clearTimeout(hold);
     if (!down) return;
-    const wasTap = !moved && !cancelled;
+    const wasTap = !moved && !cancelled && !held;
+    held = false;
     down = null; dragging = false; idleSince = performance.now();
     if (wasTap) {
       const c = scene.pick(e.clientX, e.clientY);
@@ -266,6 +275,7 @@ async function init() {
   initExtras(cfg, { burst });
   initPages();
   initBgm(cfg);
+  initEggs(cfg, { backdrop, burst, onHeart: (x, y) => scene.pick(x, y) >= 0 });
   $("#loader").hidden = true;
 }
 init();

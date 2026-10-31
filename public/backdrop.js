@@ -130,7 +130,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
   const billImg = new Image();                          // the couple's picture on the rooftop billboard
   billImg.onload = () => { if (w) build(); };
   billImg.src = "billboard.jpg";
-  let bill = null;
+  let bill = null, moonPos = null;
   let wins = [], bulbs = [], lantern = [], lake = { y0: 0, mx: 0, sx: 0, lh: 0 };
 
   function build() {
@@ -150,6 +150,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
     g.fillStyle = glow; g.fillRect(0, 0, w, h);
     // moon
     const mr = Math.max(24, Math.min(w, h) * 0.07), mx = w * 0.84, my = h * 0.15;
+    moonPos = { x: mx, y: my, r: mr };
     const mg = g.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 3.4);
     mg.addColorStop(0, "rgba(255,244,200,.45)"); mg.addColorStop(1, "rgba(255,244,200,0)");
     g.fillStyle = mg; g.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
@@ -427,5 +428,7 @@ export function createBackdrop(canvas, { mobile, getRect }) {
 
   resize();
   raf = requestAnimationFrame((ts) => { last = ts; frame(ts); });
-  return { resize, set paused(v) { paused = v; } };
+  // screen positions of the moon and the billboard, for tap easter eggs
+  const targets = () => ({ moon: moonPos, bill });
+  return { resize, targets, set paused(v) { paused = v; } };
 }

@@ -58,6 +58,19 @@ window.LOVE_CONFIG = {
 
   moon: { title: "The moon on our first day", sub: "National Girlfriend Day, the day we got together." },
 
+  // Hidden surprises. Edit the texts freely.
+  eggs: {
+    moonText: "You were under this one.",                                  // tap the moon on the skyline
+    billboard: "Famous on the Yangon skyline.",                            // tap the billboard
+    cats: "I love you more than my life ❤️",                               // tap 5 different cats
+    heart: "Every piece of this heart is a day with you.",                 // press and hold the heart
+    nerdy: "You found it. Still yours, still nerdy ❤️",                    // type "nerdy" or tap the signature 3 times
+    days: "Day 1 was National Girlfriend Day. Every day since has been better.",   // tap "N days together" 3 times  (PLACEHOLDER: write your own)
+    night: "It's late. Sleep well, I'm thinking of you.",                  // opened between midnight and 5am
+    month: "Another month with you. Thank you.",                           // opened on the 1st of a month
+    confess: "The day I told you how I felt. Scratch the card to remember it.",   // opened on 21 February
+  },
+
   note: {
     title: "Happy 3 months",
     text: "It started on National Girlfriend Day. I would pick it again, every time.",

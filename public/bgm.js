@@ -41,7 +41,8 @@ export function initBgm(cfg) {
     wanted ? play() : pause();
   });
   // a song the user taps takes over from the background music, which resumes when the song stops
-  addEventListener("song-play", () => { if (audio) audio.pause(); else if (ytReady) yt.pauseVideo(); });
+  addEventListener("bgm-dim", () => { if (audio) audio.volume = vol * 0.35; else if (ytReady) yt.setVolume(vol * 35); });
+  addEventListener("song-play",() => { if (audio) audio.pause(); else if (ytReady) yt.pauseVideo(); });
   addEventListener("song-stop", () => { if (wanted && started) play(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) { if (audio) audio.pause(); else if (ytReady) yt.pauseVideo(); } else if (wanted && started) play(); });
 }

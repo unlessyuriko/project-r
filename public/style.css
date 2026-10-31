@@ -418,3 +418,14 @@ html, body { overflow-x: clip; overflow-y: visible; }
 .songs .row.play:not(.playing) .pbtn { animation: pbtn-pulse 2.4s ease-in-out infinite; }
 @keyframes pbtn-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 @media (prefers-reduced-motion: reduce) { .songs .row.play:not(.playing) .pbtn { animation: none; } }
+
+/* ---- easter eggs ---- */
+.egg-note { position: fixed; left: 50%; top: 50%; z-index: 60; width: min(86vw, 320px); transform: translate(-50%, -50%); padding: 18px 18px; text-align: center; display: grid; gap: 8px; cursor: pointer; color: var(--ink); animation: egg-in .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+.egg-note b { font-size: 20px; font-weight: 900; color: var(--pink); }
+.egg-note p { font-weight: 700; line-height: 1.5; }
+.egg-note.out { opacity: 0; transition: opacity .3s; }
+@keyframes egg-in { from { opacity: 0; transform: translate(-50%, -40%) scale(.7); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.egg-storm { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: hidden; }
+.egg-storm span { position: absolute; top: -40px; color: var(--pink); text-shadow: 0 0 6px #fff8; animation: egg-fall linear both; }
+.egg-storm span:nth-child(5n+1) { color: #fff; }
+@keyframes egg-fall { to { transform: translate(var(--dx), 112vh) rotate(260deg); } }
