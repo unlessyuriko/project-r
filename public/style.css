@@ -332,17 +332,9 @@ html, body { overflow-x: clip; overflow-y: visible; }
 .reason::after, .songs a::after, .songs .row::after {
   content: ""; position: absolute; right: 22px; bottom: calc(100% - 4px); width: 44px; height: 35px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 32'%3E%3Cg stroke='%233a0a24' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M7 13L8 2l9 5z' fill='%23fff5f8'/%3E%3Cpath d='M33 13L32 2l-9 5z' fill='%23fff5f8'/%3E%3Cpath d='M9.5 10l.6-5 4 2.4zM30.5 10l-.6-5-4 2.4z' fill='%23ff9ec0' stroke='none'/%3E%3Cellipse cx='20' cy='17' rx='15' ry='11.5' fill='%23fff5f8'/%3E%3Cpath d='M18.2 21.3q1.8 1.6 3.6 0' fill='none' stroke-width='1.4'/%3E%3Cpath d='M4 17.5l-3 -.8M4 20l-3 .8M36 17.5l3 -.8M36 20l3 .8' fill='none' stroke-width='1.1'/%3E%3C/g%3E%3Cpath d='M13.5 20.2C8.5 17 9.7 12.6 11.9 12.6c1 0 1.4.6 1.6 1.2.2-.6.6-1.2 1.6-1.2 2.2 0 3.4 4.4-1.6 7.6z' fill='%23ff3d6e' stroke='%23c01048' stroke-width='.8' stroke-linejoin='round'/%3E%3Ccircle cx='12.3' cy='14.2' r='.8' fill='%23fff'/%3E%3Cpath d='M26.5 20.2C21.5 17 22.7 12.6 24.9 12.6c1 0 1.4.6 1.6 1.2.2-.6.6-1.2 1.6-1.2 2.2 0 3.4 4.4-1.6 7.6z' fill='%23ff3d6e' stroke='%23c01048' stroke-width='.8' stroke-linejoin='round'/%3E%3Ccircle cx='25.3' cy='14.2' r='.8' fill='%23fff'/%3E%3Cellipse cx='8.5' cy='21' rx='2.6' ry='1.7' fill='%23ff9ec0' opacity='.8'/%3E%3Cellipse cx='31.5' cy='21' rx='2.6' ry='1.7' fill='%23ff9ec0' opacity='.8'/%3E%3Cpath d='M18.6 19.2h2.8l-1.4 1.6z' fill='%23ff3d6e'/%3E%3Cg stroke='%233a0a24' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'%3E%3Cellipse cx='10.5' cy='28.5' rx='5.5' ry='3.6' fill='%23fff5f8'/%3E%3Cellipse cx='29.5' cy='28.5' rx='5.5' ry='3.6' fill='%23fff5f8'/%3E%3Cpath d='M8.6 28.4v2.2M12.4 28.4v2.2M27.6 28.4v2.2M31.4 28.4v2.2' fill='none' stroke-width='1.2'/%3E%3C/g%3E%3C/svg%3E") no-repeat center 40px / 44px 35px;
-  pointer-events: none; animation: cat-peek 6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 700ms);
+  pointer-events: none; transition: background-position .7s cubic-bezier(.3, 1.5, .5, 1);
 }
-.songs li:nth-child(2) a::after, .songs li:nth-child(2) .row::after { animation-delay: .9s; }
-.songs li:nth-child(3) a::after, .songs li:nth-child(3) .row::after { animation-delay: 1.8s; }
-@keyframes cat-peek {
-  0%, 12% { background-position: center 40px; }
-  22%, 58% { background-position: center 0; }
-  64% { background-position: center 5px; }
-  70% { background-position: center 0; }
-  80%, 100% { background-position: center 40px; }
-}
+.reason.peek::after, .songs a.peek::after, .songs .row.peek::after { background-position: center 0; }
 @media (prefers-reduced-motion: reduce) {
   .reason::after, .songs a::after, .songs .row::after { animation: none; background-position: center 0; }
 }

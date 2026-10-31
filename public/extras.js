@@ -259,4 +259,20 @@ export function initExtras(cfg, { burst }) {
   add(cfg.songs?.list?.length, () => songs(cfg));
   add(cfg.startDate && cfg.moon, () => moon(cfg));
   add(cfg.note, () => note(cfg));
+  catPeek(root);
+}
+
+// each list item's cat peeks up at its own random moments, for random lengths of time
+function catPeek(root) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  root.querySelectorAll(".reason, .songs a, .songs .row").forEach((item) => {
+    const loop = () => {
+      setTimeout(() => {
+        item.classList.add("peek");
+        setTimeout(() => { item.classList.remove("peek"); loop(); }, rand(1800, 4200));
+      }, rand(1200, 7500));
+    };
+    loop();
+  });
 }
