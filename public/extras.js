@@ -252,6 +252,7 @@ function loadYT() {
 function songs(cfg) {
   const so = cfg.songs;
   const s = section(`Side A · ${so.list.length} tracks`, so.title, so.sub);
+  if (so.list.some((x) => x.audio || ytId(x.youtube))) s.appendChild(el("p", "sec-sub small tap-hint", "Tap the play button to listen"));
   const ul = el("ul", "songs");
   const host = el("div", "yt-host"); host.appendChild(el("div", "", ""));
   const audio = new Audio(); audio.preload = "none";
@@ -293,7 +294,7 @@ function songs(cfg) {
 
   so.list.forEach((x, i) => {
     const playable = !!(x.audio || ytId(x.youtube));
-    const body = `<span class="disc">${doodle("d-star")}</span><span class="meta"><b>${esc(x.title)}</b><i>${esc(x.artist)}</i></span><span class="eq" aria-hidden="true"><u></u><u></u><u></u></span><span class="num">${i + 1}</span>`;
+    const body = `<span class="disc">${doodle("d-star")}</span><span class="meta"><b>${esc(x.title)}</b><i>${esc(x.artist)}</i></span><span class="eq" aria-hidden="true"><u></u><u></u><u></u></span>${playable ? '<span class="pbtn" aria-hidden="true"><svg class="ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg><svg class="ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></span>' : `<span class="num">${i + 1}</span>`}`;
     const li = el("li", "", x.url && !playable ? `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${body}</a>` : `<div class="row${playable ? " play" : ""}"${playable ? ` role="button" tabindex="0" aria-label="Play ${esc(x.title)}"` : ""}>${body}</div>`);
     const row = li.firstChild; rows.push(row);
     if (playable) {
