@@ -36,12 +36,6 @@ window.LOVE_CONFIG = {
     ],
   },
 
-  wheel: {
-    title: "Spin for your gift",
-    sub: "Seven things could happen next",
-    gifts: ["Breakfast in bed", "Movie night, you pick", "Massage coupon", "Picnic date", "I cook dinner", "Weekend away", "A new book"],
-  },
-
   loveTest: { title: "Love test", sub: "How compatible are we?", names: ["Ye Pyae", "May Thu"], result: "A perfect match. 100%, no doubt." },
 
   songs: {
