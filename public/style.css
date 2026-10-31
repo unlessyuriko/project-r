@@ -372,3 +372,28 @@ html, body { overflow-x: clip; overflow-y: visible; }
 .bgm-btn.on i { display: none; }
 .bgm-btn.on { background: #ffd1e4; }
 .bgm-btn:active { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
+
+/* ---- last card: ice flakes turn into hearts and float up ---- */
+.note { position: relative; }
+.note-fx { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 0; }
+.note > :not(.note-fx) { position: relative; z-index: 1; }
+.note-fx .fl { position: absolute; left: var(--x); top: 108%; width: var(--s); height: var(--s); opacity: 0; will-change: top, transform; }
+.page.pg-in .note-fx .fl { animation: fl-rise var(--t) linear var(--d) infinite; }
+.note-fx .fl b { position: absolute; inset: 0; display: block; }
+.note-fx .fl svg { width: 100%; height: 100%; overflow: visible; }
+.note-fx .sn svg { stroke: #8fd0ff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.note-fx .hr svg { fill: var(--pink); stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+.note-fx .fl.red .hr svg { fill: #e0243f; }
+.page.pg-in .note-fx .sn { animation: fl-snow var(--t) linear var(--d) infinite; }
+.page.pg-in .note-fx .hr { animation: fl-heart var(--t) linear var(--d) infinite; }
+@keyframes fl-rise {
+  0% { top: 108%; opacity: 0; transform: translateX(0) rotate(0deg); }
+  8% { opacity: 1; }
+  35% { transform: translateX(var(--dx)) rotate(90deg); }
+  70% { transform: translateX(calc(var(--dx) * -.6)) rotate(0deg); }
+  92% { opacity: 1; }
+  100% { top: -14%; opacity: 0; transform: translateX(var(--dx)) rotate(-10deg); }
+}
+@keyframes fl-snow { 0%, 36% { opacity: 1; transform: scale(1); } 46%, 100% { opacity: 0; transform: scale(.4); } }
+@keyframes fl-heart { 0%, 38% { opacity: 0; transform: scale(.3); } 50% { opacity: 1; transform: scale(1.25); } 58%, 100% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .note-fx { display: none; } }

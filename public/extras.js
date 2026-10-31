@@ -325,10 +325,23 @@ function moon(cfg) {
   return s;
 }
 
+// ice flakes that turn into little hearts and float up inside the last card
+const SNOW = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3v26M5 9.5l22 13M27 9.5l-22 13M12 5l4 3 4-3M12 27l4-3 4 3M4 14l5 0 1-4M28 18l-5 0-1 4M4 18l5 0 1 4M28 14l-5 0-1-4" fill="none"/></svg>';
+const HEART = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27C6 19 3.5 14.5 3.5 10.8 3.5 7 6.3 4.6 9.6 4.6c2.6 0 4.7 1.5 6.4 4 1.7-2.5 3.8-4 6.4-4 3.3 0 6.1 2.4 6.1 6.2C28.5 14.5 26 19 16 27z"/></svg>';
 function note(cfg) {
   const n = cfg.note;
   const s = el("section", "panel sec note");
-  s.append(el("h2", "sec-title", esc(n.title)), el("p", "sec-sub", esc(n.text)), el("p", "made", `${doodle("d-heart")}<span>${esc(cfg.signature || "")}</span>`));
+  const fx = el("div", "note-fx"); fx.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 18; i++) {
+    const f = el("span", "fl" + (i % 3 === 0 ? " red" : ""), `<b class="sn">${SNOW}</b><b class="hr">${HEART}</b>`);
+    f.style.setProperty("--x", (4 + Math.random() * 90).toFixed(1) + "%");
+    f.style.setProperty("--d", (-Math.random() * 9).toFixed(2) + "s");
+    f.style.setProperty("--t", (7 + Math.random() * 5).toFixed(2) + "s");
+    f.style.setProperty("--s", (14 + Math.random() * 14).toFixed(0) + "px");
+    f.style.setProperty("--dx", (Math.random() * 40 - 20).toFixed(0) + "px");
+    fx.appendChild(f);
+  }
+  s.append(fx, el("h2", "sec-title", esc(n.title)), el("p", "sec-sub", esc(n.text)), el("p", "made", `${doodle("d-heart")}<span>${esc(cfg.signature || "")}</span>`));
   return s;
 }
 
