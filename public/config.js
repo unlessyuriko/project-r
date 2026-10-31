@@ -11,7 +11,7 @@ window.LOVE_CONFIG = {
   finalTitle: "Happy 3 months, my love ❤️",
   finalMessage:
     "You opened every single day. Thank you for every “love you”, every goodnight and every ordinary day that felt special because of you. Here's to the next 3 months, and the 3 after that.",
-  signature: "— Yours",
+  signature: "— Yours Nerdy",
 
   // ---- sections under the heart (delete a block to hide that section) ----
   togetherNote: "Since National Girlfriend Day, 1 August 2026",             // small line under the live counter
@@ -40,18 +40,23 @@ window.LOVE_CONFIG = {
     // shown as scattered chips under the result
     common: ["Black color", "Spicy sour steamed fish", "Green papaya salad", "Hotpot", "Mala Xiang Guo", "Talking straight", "Quality time", "and so much more"] },
 
+  // Background music, starts on her first tap. Put a file in public/audio/ (audio: "audio/winter.mp3") or use a YouTube link.
+
+  bgm: { audio: "", youtube: "", title: "Winter music", volume: 0.35 },
+
+
   songs: {
     title: "Songs that remind me of you",
     sub: "Our playlist, in order",
     list: [
-      // { title: "Song name", artist: "Artist", url: "https://www.youtube.com/watch?v=..." }  (url is optional)
-      { title: "Perfect", artist: "Ed Sheeran" },
-      { title: "All of Me", artist: "John Legend" },
-      { title: "Can't Help Falling in Love", artist: "Elvis Presley" },
+      // { title: "Song name", artist: "Artist", youtube: "VIDEO_ID_OR_LINK" }  or  audio: "songs/file.mp3"  (tap to play)
+      { title: "Perfect", artist: "Ed Sheeran", youtube: "2Vv-BfVoq4g" },
+      { title: "All of Me", artist: "John Legend", youtube: "450p7goxZqg" },
+      { title: "Can't Help Falling in Love", artist: "Elvis Presley", youtube: "vGJTaP6anOU" },
     ],
   },
 
-  moon: { title: "The moon on National Girlfriend Day", sub: "" },     // computed from startDate
+  moon: { title: "The moon on our first day", sub: "National Girlfriend Day, the day we got together." },
 
   note: {
     title: "Happy 3 months",

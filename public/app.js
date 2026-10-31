@@ -3,6 +3,7 @@ import { createBackdrop } from "./backdrop.js";
 import { createScene } from "./heart3d.js";
 import { initExtras } from "./extras.js";
 import { wrapHero, initPages } from "./pages.js";
+import { initBgm } from "./bgm.js";
 
 wrapHero();
 
@@ -264,6 +265,7 @@ async function init() {
   updateProgress();
   initExtras(cfg, { burst });
   initPages();
+  initBgm(cfg);
   $("#loader").hidden = true;
 }
 init();

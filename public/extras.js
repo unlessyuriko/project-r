@@ -224,15 +224,74 @@ function loveTest(cfg) {
 }
 
 // ---------- songs ----------
+// Tap a song to play it. A song can have `youtube` (a video id or link) or `audio` (a file in public/songs/).
+// One shared player, so tapping another song switches to it and tapping the playing one pauses it.
+const ytId = (v) => { const m = String(v || "").match(/(?:v=|youtu\.be\/|embed\/|^)([\w-]{11})(?:[?&#]|$)/); return m ? m[1] : ""; };
+let ytReady = null;
+function loadYT() {
+  if (ytReady) return ytReady;
+  ytReady = new Promise((res) => {
+    if (window.YT && window.YT.Player) return res(window.YT);
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); res(window.YT); };
+    const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(sc);
+  });
+  return ytReady;
+}
+
 function songs(cfg) {
   const so = cfg.songs;
   const s = section(`Side A · ${so.list.length} tracks`, so.title, so.sub);
   const ul = el("ul", "songs");
+  const host = el("div", "yt-host"); host.appendChild(el("div", "", ""));
+  const audio = new Audio(); audio.preload = "none";
+  let player = null, cur = -1;
+  const rows = [];
+  const setState = (i, state) => rows.forEach((r, j) => { r.classList.toggle("playing", j === i && state === "play"); r.classList.toggle("loading", j === i && state === "load"); });
+  const stop = () => { try { audio.pause(); } catch (e) {} try { player && player.pauseVideo(); } catch (e) {} };
+  audio.onended = () => { setState(-1); cur = -1; };
+
+  const play = async (i) => {
+    const x = so.list[i];
+    if (cur === i) { stop(); setState(-1); cur = -1; return; }          // tap the playing song again to pause
+    stop(); cur = i; setState(i, "load");
+    if (x.audio) {
+      audio.src = x.audio; audio.play().then(() => setState(i, "play")).catch(() => { setState(-1); cur = -1; });
+      return;
+    }
+    const id = ytId(x.youtube);
+    if (!id) { setState(-1); cur = -1; return; }
+    const YT = await loadYT();
+    const start = () => { player.loadVideoById(id); player.playVideo(); };
+    if (!player) {
+      player = new YT.Player(host.firstChild, {
+        height: "120", width: "120", videoId: id,
+        playerVars: { playsinline: 1, controls: 0, rel: 0, autoplay: 1 },
+        events: {
+          onReady: () => { player.playVideo(); },
+          onStateChange: (e) => {
+            if (e.data === 1) setState(cur, "play");
+            else if (e.data === 2) setState(-1);
+            else if (e.data === 0) { setState(-1); cur = -1; }
+          },
+          onError: () => { setState(-1); const c = cur; cur = -1; if (c > -1) window.open("https://www.youtube.com/watch?v=" + ytId(so.list[c].youtube), "_blank", "noopener"); },
+        },
+      });
+    } else start();
+  };
+
   so.list.forEach((x, i) => {
-    const body = `<span class="disc">${doodle("d-star")}</span><span class="meta"><b>${esc(x.title)}</b><i>${esc(x.artist)}</i></span><span class="num">${i + 1}</span>`;
-    ul.appendChild(el("li", "", x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${body}</a>` : `<div class="row">${body}</div>`));
+    const playable = !!(x.audio || ytId(x.youtube));
+    const body = `<span class="disc">${doodle("d-star")}</span><span class="meta"><b>${esc(x.title)}</b><i>${esc(x.artist)}</i></span><span class="eq" aria-hidden="true"><u></u><u></u><u></u></span><span class="num">${i + 1}</span>`;
+    const li = el("li", "", x.url && !playable ? `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${body}</a>` : `<div class="row${playable ? " play" : ""}"${playable ? ` role="button" tabindex="0" aria-label="Play ${esc(x.title)}"` : ""}>${body}</div>`);
+    const row = li.firstChild; rows.push(row);
+    if (playable) {
+      row.addEventListener("click", () => play(i));
+      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(i); } });
+    }
+    ul.appendChild(li);
   });
-  s.appendChild(ul);
+  s.append(ul, host);
   return s;
 }
 
@@ -245,7 +304,7 @@ function moon(cfg) {
   const names = [[1.85, "New moon"], [5.54, "Waxing crescent"], [9.22, "First quarter"], [12.91, "Waxing gibbous"], [16.61, "Full moon"], [20.3, "Waning gibbous"], [23.99, "Last quarter"], [27.68, "Waning crescent"], [99, "New moon"]];
   const name = names.find(([lim]) => age < lim)[1];
   const date = d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  const s = section(date, m.title, m.sub || `${name}. Yes, I looked it up.`);
+  const s = section(date, m.title, m.sub ? `${m.sub} The moon was a ${name.toLowerCase()}.` : `${name}. Yes, I looked it up.`);
   const cv = el("canvas", "moon"); const S = 160, dpr = Math.min(devicePixelRatio || 1, 2);
   cv.width = cv.height = S * dpr; cv.style.width = cv.style.height = S + "px";
   const g = cv.getContext("2d"); g.scale(dpr, dpr);

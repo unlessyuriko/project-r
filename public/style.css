@@ -348,3 +348,27 @@ html, body { overflow-x: clip; overflow-y: visible; }
 .lt-common .chip.t3 { background: #ffb3cf; }
 @keyframes chip-in { from { opacity: 0; transform: translateY(14px) rotate(0deg) scale(.5); } to { opacity: 1; transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg)) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .lt-common .chip { animation: none; opacity: 1; } }
+
+/* ---- songs: tap to play ---- */
+.yt-host { position: fixed; left: 0; bottom: 0; width: 120px; height: 120px; opacity: 0.01; pointer-events: none; z-index: -1; }
+.songs .row.play { cursor: pointer; -webkit-user-select: none; user-select: none; }
+.songs .row.play:active { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
+.songs .eq { display: none; align-items: flex-end; gap: 3px; height: 18px; margin-left: auto; }
+.songs .eq u { width: 4px; height: 100%; background: var(--pink); border-radius: 2px; text-decoration: none; transform-origin: bottom; animation: eq-bar .8s ease-in-out infinite; }
+.songs .eq u:nth-child(2) { animation-delay: -.3s; }
+.songs .eq u:nth-child(3) { animation-delay: -.6s; }
+.songs .row.playing .eq { display: inline-flex; }
+.songs .row.playing .num { display: none; }
+.songs .row.playing { background: #ffd1e4; }
+.songs .row.loading { opacity: .75; }
+@keyframes eq-bar { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .songs .eq u { animation: none; transform: scaleY(.7); } }
+
+/* ---- background music button ---- */
+.bgm-btn { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 30; width: 42px; height: 42px; display: grid; place-items: center; background: var(--pale); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 2px 3px 0 var(--ink); padding: 0; cursor: pointer; }
+.bgm-btn svg { width: 22px; height: 22px; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; fill: var(--ink); }
+.bgm-btn svg path { fill: none; }
+.bgm-btn i { position: absolute; left: 6px; right: 6px; top: 50%; height: 3px; background: var(--pink); border-radius: 2px; transform: rotate(-45deg); }
+.bgm-btn.on i { display: none; }
+.bgm-btn.on { background: #ffd1e4; }
+.bgm-btn:active { transform: translate(2px, 3px); box-shadow: 0 0 0 var(--ink); }
