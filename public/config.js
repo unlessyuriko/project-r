@@ -36,7 +36,9 @@ window.LOVE_CONFIG = {
     ],
   },
 
-  loveTest: { title: "Love test", sub: "How compatible are we?", names: ["Ye Pyae", "May Thu"], result: "A perfect match. 100%, no doubt." },
+  loveTest: { title: "Love test", sub: "How compatible are we?", names: ["Ye Pyae", "May Thu"], result: "A perfect match. 100%, no doubt.",
+    // shown as scattered chips under the result
+    common: ["Black color", "Spicy sour steamed fish", "Green papaya salad", "Hotpot", "Mala Xiang Guo", "Talking straight", "Quality time", "and so much more"] },
 
   songs: {
     title: "Songs that remind me of you",

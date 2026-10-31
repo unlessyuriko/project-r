@@ -340,3 +340,11 @@ html, body { overflow-x: clip; overflow-y: visible; }
 }
 .reasons { gap: 30px; }
 .songs { gap: 30px; }
+
+/* ---- love test: things in common, scattered under the result ---- */
+.lt-common { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 7px; width: 100%; margin-top: 4px; }
+.lt-common .chip { display: inline-block; padding: 5px 11px; border: 2px solid var(--ink); border-radius: 99px; background: var(--pale); color: var(--ink); font-weight: 800; line-height: 1.2; box-shadow: 1px 2px 0 var(--ink); transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg)); opacity: 0; animation: chip-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.lt-common .chip.t2 { background: var(--gold); }
+.lt-common .chip.t3 { background: #ffb3cf; }
+@keyframes chip-in { from { opacity: 0; transform: translateY(14px) rotate(0deg) scale(.5); } to { opacity: 1; transform: translateY(var(--dy, 0)) rotate(var(--r, 0deg)) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .lt-common .chip { animation: none; opacity: 1; } }

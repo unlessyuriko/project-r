@@ -184,16 +184,33 @@ function loveTest(cfg) {
   const btn = el("button", "btn", "Calculate"); btn.type = "button";
   const meter = el("div", "bar"); const fill = el("span"); meter.appendChild(fill);
   const pct = el("p", "pct", ""); const quip = el("p", "sec-sub", "");
+  const common = el("div", "lt-common"); common.hidden = true;
   meter.hidden = pct.hidden = quip.hidden = true;
+  // the things they share, scattered below the result in random order, tilt and size
+  const showCommon = () => {
+    const list = (t.common || []).slice().sort(() => Math.random() - 0.5);
+    if (!list.length) return;
+    common.replaceChildren(); common.hidden = false;
+    const tints = ["", " t2", " t3"];
+    list.forEach((txt, i) => {
+      const c = el("span", "chip" + tints[Math.floor(Math.random() * 3)], esc(txt));
+      c.style.setProperty("--r", (Math.random() * 12 - 6).toFixed(1) + "deg");
+      c.style.setProperty("--dy", Math.round(Math.random() * 10 - 5) + "px");
+      c.style.fontSize = (12 + Math.floor(Math.random() * 4)) + "px";
+      c.style.animationDelay = (i * 130 + Math.random() * 120) + "ms";
+      common.appendChild(c);
+    });
+  };
   btn.onclick = () => {
+    common.hidden = true;
     meter.hidden = pct.hidden = quip.hidden = false;
     fill.style.transition = "none"; fill.style.width = "0%"; void fill.offsetWidth;
     fill.style.transition = "width 2.2s cubic-bezier(.3,1,.5,1)"; fill.style.width = "100%";
     const t0 = performance.now();
-    const step = (now) => { const p = Math.min(1, (now - t0) / 2200); pct.textContent = Math.round(100 * (1 - Math.pow(1 - p, 3))) + "%"; if (p < 1) requestAnimationFrame(step); else quip.textContent = t.result || "A perfect match."; };
+    const step = (now) => { const p = Math.min(1, (now - t0) / 2200); pct.textContent = Math.round(100 * (1 - Math.pow(1 - p, 3))) + "%"; if (p < 1) requestAnimationFrame(step); else { quip.textContent = t.result || "A perfect match."; showCommon(); } };
     quip.textContent = "Calculating..."; requestAnimationFrame(step);
   };
-  s.append(row, btn, meter, pct, quip);
+  s.append(row, btn, meter, pct, quip, common);
   return s;
 }
 
