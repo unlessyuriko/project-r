@@ -30,7 +30,7 @@ window.LOVE_CONFIG = {
       "You're always yourself. I love that about you.",
       "You appreciate whatever I do for you, even the small things.",
       "Your real laugh, the loud one.",
-      "You tell me the truth, even when it's hard.",
+      "Your feedback is honest, in black and white, even when the truth is hard.",
       "Every ordinary day is better with you in it.",
       "You let me rest on your chest when I'm down.",
     ],
