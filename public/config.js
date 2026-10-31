@@ -17,10 +17,10 @@ window.LOVE_CONFIG = {
   togetherNote: "Since National Girlfriend Day, 1 August 2026",             // small line under the live counter
 
   scratch: {
-    tag: "Scratch to reveal",
-    title: "Scratch to see my favourite day",
+    tag: "21 February 2026",
+    title: "Scratch to see the day I confessed",
     hint: "Use your finger",
-    text: "Replace me with the day you remember best, and why. Keep it short and a little silly.",
+    text: "After dance training, you gave me a tour of your university, YTU. We were not a couple yet. That was the day I told you how I felt, and it became my favourite day.",
   },
 
   reasons: {
