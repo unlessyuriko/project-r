@@ -247,7 +247,8 @@ function songs(cfg) {
   const audio = new Audio(); audio.preload = "none";
   let player = null, cur = -1;
   const rows = [];
-  const setState = (i, state) => rows.forEach((r, j) => { r.classList.toggle("playing", j === i && state === "play"); r.classList.toggle("loading", j === i && state === "load"); });
+  const setState = (i, state) => { window.dispatchEvent(new CustomEvent(state === "play" || state === "load" ? "song-play" : "song-stop")); paintRows(i, state); };
+  const paintRows = (i, state) => rows.forEach((r, j) => { r.classList.toggle("playing", j === i && state === "play"); r.classList.toggle("loading", j === i && state === "load"); });
   const stop = () => { try { audio.pause(); } catch (e) {} try { player && player.pauseVideo(); } catch (e) {} };
   audio.onended = () => { setState(-1); cur = -1; };
 

@@ -42,7 +42,7 @@ window.LOVE_CONFIG = {
 
   // Background music, starts on her first tap. Put a file in public/audio/ (audio: "audio/winter.mp3") or use a YouTube link.
 
-  bgm: { audio: "", youtube: "", title: "Winter music", volume: 0.35 },
+  bgm: { audio: "", youtube: "tQpbXAmRMqA", title: "Winter music", volume: 0.35 },
 
 
   songs: {

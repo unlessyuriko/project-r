@@ -40,5 +40,8 @@ export function initBgm(cfg) {
     try { localStorage.setItem("bgm-off", wanted ? "0" : "1"); } catch (er) {}
     wanted ? play() : pause();
   });
+  // a song the user taps takes over from the background music, which resumes when the song stops
+  addEventListener("song-play", () => { if (audio) audio.pause(); else if (ytReady) yt.pauseVideo(); });
+  addEventListener("song-stop", () => { if (wanted && started) play(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) { if (audio) audio.pause(); else if (ytReady) yt.pauseVideo(); } else if (wanted && started) play(); });
 }
